@@ -48,7 +48,7 @@ export default async function RootLayout({
       <body
         className="min-h-full flex flex-col"
         style={{
-          background: `linear-gradient(to bottom right, var(--color-bg-start), var(--color-bg-mid), var(--color-bg-end))`,
+          background: `linear-gradient(to bottom right, var(--bg-start), var(--bg-mid), var(--bg-end))`,
         }}
       >
         <ThemeToggle />
