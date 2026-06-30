@@ -67,7 +67,7 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-slate-200/60 dark:border-slate-700/60">
+        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-slate-200/60 dark:border-slate-700/60">
           <div className="flex items-center justify-center gap-2 text-slate-800 dark:text-white mb-2">
             <span
               className={`inline-block w-2 h-2 rounded-full ${phaseColors[status]} animate-pulse`}
@@ -76,14 +76,14 @@ export default async function HomePage() {
               {phaseLabels[status]}
             </span>
           </div>
-          <p className="text-slate-700 dark:text-slate-200">
+          <p className="text-slate-700 dark:text-slate-100">
             {phaseDescriptions[status]}
           </p>
         </div>
 
         <Link
           href="/admin/login"
-          className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
         >
           <svg
             className="w-4 h-4"
