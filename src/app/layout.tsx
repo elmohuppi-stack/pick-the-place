@@ -45,7 +45,12 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 dark:from-slate-950 dark:via-indigo-950 dark:to-purple-950">
+      <body
+        className="min-h-full flex flex-col"
+        style={{
+          background: `linear-gradient(to bottom right, var(--color-bg-start), var(--color-bg-mid), var(--color-bg-end))`,
+        }}
+      >
         <ThemeToggle />
         <main className="flex-1 flex flex-col">{children}</main>
       </body>

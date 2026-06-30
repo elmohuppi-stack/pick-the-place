@@ -58,17 +58,17 @@ export default async function HomePage() {
         </div>
 
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-theme-primary">
             Pick the Place
           </h1>
-          <p className="mt-3 text-slate-900 dark:text-white text-lg font-medium">
+          <p className="mt-3 text-theme-primary text-lg font-medium">
             {event?.title ||
               "Findet gemeinsam den Ort für euer nächstes Jahrestreffen"}
           </p>
         </div>
 
-        <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-slate-200/60 dark:border-slate-700/60">
-          <div className="flex items-center justify-center gap-2 text-slate-800 dark:text-white mb-2">
+        <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-theme-card">
+          <div className="flex items-center justify-center gap-2 text-theme-primary mb-2">
             <span
               className={`inline-block w-2 h-2 rounded-full ${phaseColors[status]} animate-pulse`}
             />
@@ -76,14 +76,12 @@ export default async function HomePage() {
               {phaseLabels[status]}
             </span>
           </div>
-          <p className="text-slate-700 dark:text-slate-100">
-            {phaseDescriptions[status]}
-          </p>
+          <p className="text-theme-secondary">{phaseDescriptions[status]}</p>
         </div>
 
         <Link
           href="/admin/login"
-          className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-theme-muted hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
         >
           <svg
             className="w-4 h-4"
