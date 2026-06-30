@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { cookies } from "next/headers";
 import ThemeToggle from "@/components/ThemeToggle";
 import "./globals.css";
 
@@ -13,15 +14,19 @@ export const metadata: Metadata = {
   description: "Findet gemeinsam den Ort für euer nächstes Jahrestreffen",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const themeCookie = cookieStore.get("theme")?.value;
+  const isDark = themeCookie === "dark";
+
   return (
     <html
       lang="de"
-      className={`${inter.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased${isDark ? " dark" : ""}`}
       suppressHydrationWarning
     >
       <head>
@@ -30,9 +35,11 @@ export default function RootLayout({
             __html: `
               (function() {
                 var t = localStorage.getItem('theme');
-                if (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) {
+                var isDark = t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
                   document.documentElement.classList.add('dark');
                 }
+                document.cookie = 'theme=' + (isDark ? 'dark' : 'light') + '; path=/; max-age=31536000; SameSite=Lax';
               })();
             `,
           }}
