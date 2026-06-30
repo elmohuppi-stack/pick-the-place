@@ -5,6 +5,8 @@ const resend = process.env.RESEND_API_KEY
   : null;
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const FROM_EMAIL = process.env.EMAIL_FROM || "onboarding@resend.dev";
+const FROM_NAME = process.env.EMAIL_FROM_NAME || "Pick the Place";
 
 export async function sendProposalInvite(
   email: string,
@@ -19,7 +21,7 @@ export async function sendProposalInvite(
   }
 
   const { data, error } = await resend.emails.send({
-    from: "Pick the Place <noreply@picktheplace.de>",
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
     to: email,
     subject: "🌍 Ort fürs Jahrestreffen vorschlagen",
     html: `
@@ -57,7 +59,7 @@ export async function sendVoteInvite(
   }
 
   const { data, error } = await resend.emails.send({
-    from: "Pick the Place <noreply@picktheplace.de>",
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
     to: email,
     subject: `🗳️ Wahlrunde ${roundNumber} – Ort fürs Jahrestreffen`,
     html: `
@@ -93,7 +95,7 @@ export async function sendResultsNotification(
   }
 
   const { data, error } = await resend.emails.send({
-    from: "Pick the Place <noreply@picktheplace.de>",
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
     to: email,
     subject: `🏆 Ergebnis: Unser nächstes Jahrestreffen findet statt in...`,
     html: `
