@@ -61,7 +61,7 @@ export default async function HomePage() {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
             Pick the Place
           </h1>
-          <p className="mt-3 text-slate-700 dark:text-slate-300 text-lg">
+          <p className="mt-3 text-slate-900 dark:text-white text-lg font-medium">
             {event?.title ||
               "Findet gemeinsam den Ort für euer nächstes Jahrestreffen"}
           </p>
