@@ -6,16 +6,16 @@
 
 ## Tech Stack
 
-| Komponente | Entscheidung |
-|---|---|
-| **Framework** | Next.js 15 (App Router) + TypeScript |
-| **Styling** | Tailwind CSS v4 – mobile-first, modern |
-| **Datenbank** | SQLite via Prisma ORM |
-| **E-Mail** | Resend (100 E-Mails/Tag kostenlos) |
-| **Auth** | Magic Links (eindeutiger Token pro Teilnehmer in URL) |
-| **Echtzeit-Updates** | ❌ Manuelles Neuladen (für ~14 Personen völlig ausreichend) |
-| **Elimination** | System schlägt Orte <50% der Höchststimmen vor → Admin bestätigt/passt an |
-| **Deployment** | Docker + Caddy (SSL) auf Hetzner CX22 (~5 €/Monat) |
+| Komponente           | Entscheidung                                                              |
+| -------------------- | ------------------------------------------------------------------------- |
+| **Framework**        | Next.js 15 (App Router) + TypeScript                                      |
+| **Styling**          | Tailwind CSS v4 – mobile-first, modern                                    |
+| **Datenbank**        | SQLite via Prisma ORM                                                     |
+| **E-Mail**           | Resend (100 E-Mails/Tag kostenlos)                                        |
+| **Auth**             | Magic Links (eindeutiger Token pro Teilnehmer in URL)                     |
+| **Echtzeit-Updates** | ❌ Manuelles Neuladen (für ~14 Personen völlig ausreichend)               |
+| **Elimination**      | System schlägt Orte <50% der Höchststimmen vor → Admin bestätigt/passt an |
+| **Deployment**       | Docker + Caddy (SSL) auf Hetzner CX22 (~5 €/Monat)                        |
 
 ---
 
@@ -129,34 +129,36 @@ enum EmailType {
 
 ### Öffentliche Seiten (mobile-first)
 
-| Route | Zweck |
-|---|---|
-| `/` | Landing Page – zeigt aktuelle Phase an |
+| Route                | Zweck                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------- |
+| `/`                  | Landing Page – zeigt aktuelle Phase an                                                                  |
 | `/propose?token=XYZ` | Ort vorschlagen – Liste vorhandener Vorschläge + Formular für neuen Vorschlag + "Kein Vorschlag"-Button |
-| `/vote?token=XYZ` | Aktuelle Wahlrunde – Liste der aktiven Orte zum Auswählen |
-| `/results?token=XYZ` | Ergebnisse der aktuellen/letzten Runde mit Visualisierung |
+| `/vote?token=XYZ`    | Aktuelle Wahlrunde – Liste der aktiven Orte zum Auswählen                                               |
+| `/results?token=XYZ` | Ergebnisse der aktuellen/letzten Runde mit Visualisierung                                               |
 
 ### Admin-Seiten
 
-| Route | Zweck |
-|---|---|
-| `/admin/login` | Admin-Login (Credentials aus `.env`) |
-| `/admin` | Dashboard – Event-Status, Übersicht über Teilnehmer & Runden |
-| `/admin/participants` | Teilnehmer CRUD (Name, E-Mail hinzufügen/entfernen) |
-| `/admin/locations` | Vorschläge verwalten (ansehen, für Runde (de)aktivieren) |
-| `/admin/rounds` | Runden verwalten: Start/Ende setzen, Orte eliminieren, neue Runde anlegen |
-| `/admin/email` | E-Mail-Einladungen versenden (Proposal / Voting / Ergebnisse) |
+| Route                 | Zweck                                                                     |
+| --------------------- | ------------------------------------------------------------------------- |
+| `/admin/login`        | Admin-Login (Credentials aus `.env`)                                      |
+| `/admin`              | Dashboard – Event-Status, Übersicht über Teilnehmer & Runden              |
+| `/admin/participants` | Teilnehmer CRUD (Name, E-Mail hinzufügen/entfernen)                       |
+| `/admin/locations`    | Vorschläge verwalten (ansehen, für Runde (de)aktivieren)                  |
+| `/admin/rounds`       | Runden verwalten: Start/Ende setzen, Orte eliminieren, neue Runde anlegen |
+| `/admin/email`        | E-Mail-Einladungen versenden (Proposal / Voting / Ergebnisse)             |
 
 ---
 
 ## App-Flow (User Journey)
 
 ### 1. Setup-Phase
+
 1. Admin logged in → legt Event an (z. B. "Jahrestreffen 2026")
 2. Admin fügt Teilnehmer hinzu (Name + E-Mail)
 3. System generiert pro Teilnehmer einen eindeutigen `authToken`
 
 ### 2. Proposal-Phase (Vorschlagsrunde)
+
 1. Admin setzt Event-Status auf `proposal` + optionales Enddatum
 2. Admin klickt "Einladungen senden" → E-Mails mit Magic Link `.../propose?token=XYZ`
 3. Teilnehmer klicken Link → sehen:
@@ -166,6 +168,7 @@ enum EmailType {
 4. Admin sieht Übersicht: alle Vorschläge + wer hat verzichtet
 
 ### 3. Voting-Runde 1
+
 1. Admin wählt aus den Vorschlägen die Locations für Runde 1 aus
 2. Admin setzt Enddatum + startet Runde
 3. Admin sendet Voting-Einladungen → E-Mails mit Link `.../vote?token=XYZ`
@@ -173,6 +176,7 @@ enum EmailType {
 5. Sobald **alle gewählt haben** **ODER** die Deadline erreicht ist → Ergebnisse anzeigen
 
 ### 4. Elimination & nächste Runde
+
 1. Admin sieht Ergebnisse mit Balkendiagramm
 2. System schlägt vor: **alle Orte unter 50% der Höchststimmen entfernen**
 3. Admin kann manuell Orte wieder hinzufügen oder weitere entfernen
@@ -180,6 +184,7 @@ enum EmailType {
 5. Wiederholung ab Schritt 3, bis ein Ort **> 50 %** der Stimmen hat (eindeutiger Favorit)
 
 ### 5. Abschluss
+
 - Sieger wird präsentiert
 - Admin kann Event schließen oder archivieren
 
@@ -277,7 +282,7 @@ services:
       - "3000:3000"
     env_file: .env
     volumes:
-      - data:/app/data  # SQLite-Datenbank persistent
+      - data:/app/data # SQLite-Datenbank persistent
     restart: unless-stopped
 
   caddy:
@@ -300,6 +305,7 @@ volumes:
 ## Implementierungs-Phasen
 
 ### Phase 1 – Grundgerüst
+
 - [ ] Next.js-Projekt aufsetzen (`create-next-app`)
 - [ ] Tailwind CSS + PostCSS konfigurieren
 - [ ] Prisma + SQLite initialisieren, Schema definieren, erste Migration
@@ -308,6 +314,7 @@ volumes:
 - [ ] Basis-Layout (`layout.tsx`) mit mobile-first Container
 
 ### Phase 2 – Admin-Auth
+
 - [ ] Admin-Login-Seite (Credentials aus `.env`)
 - [ ] Admin-Session (JWT oder iron-session)
 - [ ] Middleware für Admin-Routen-Schutz
@@ -315,10 +322,12 @@ volumes:
 - [ ] Middleware für öffentliche Routen (token-check)
 
 ### Phase 3 – Teilnehmerverwaltung
+
 - [ ] Teilnehmer-CRUD im Admin (hinzufügen, auflisten, entfernen)
 - [ ] Bulk-Import per Textarea (optional)
 
 ### Phase 4 – Vorschlagsrunde
+
 - [ ] Proposal-Seite (öffentlich, token-geschützt)
 - [ ] Liste vorhandener Vorschläge anzeigen
 - [ ] Formular für neuen Vorschlag
@@ -326,6 +335,7 @@ volumes:
 - [ ] Admin-Ansicht: alle Vorschläge + Opt-out-Status
 
 ### Phase 5 – E-Mail-Versand
+
 - [ ] Resend-Client in `lib/email.ts`
 - [ ] E-Mail-Templates (HTML) für:
   - Proposal-Einladung
@@ -334,6 +344,7 @@ volumes:
 - [ ] Admin-E-Mail-Formular mit Empfänger-Auswahl
 
 ### Phase 6 – Voting-System
+
 - [ ] Voting-Seite (öffentlich, token-geschützt)
 - [ ] Aktive Orte anzeigen
 - [ ] Einen Favoriten auswählen + absenden
@@ -342,6 +353,7 @@ volumes:
 - [ ] Admin: Runde starten/stoppen, Enddatum setzen
 
 ### Phase 7 – Ergebnisse & Elimination
+
 - [ ] Ergebnisse-Seite mit CSS-Balkendiagramm
 - [ ] Admin: Ergebnisse einsehen
 - [ ] Admin: Eliminations-UI – Systemvorschlag (≤50%) + manuelle Anpassung
@@ -349,6 +361,7 @@ volumes:
 - [ ] Sieger-Verkündung bei eindeutigem Favorit (>50%)
 
 ### Phase 8 – Finalisierung & Deployment
+
 - [ ] Responsive Design-Feinschliff (iPhone/Android-Test)
 - [ ] Ladezustände, Leere-Zustände, Error-States
 - [ ] Seed-Skript für Testdaten
