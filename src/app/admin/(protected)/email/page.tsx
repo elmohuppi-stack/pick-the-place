@@ -183,14 +183,29 @@ export default function EmailPage() {
           Die E-Mails werden automatisch mit den Magic Links versendet. Jeder
           Teilnehmer erhält einen persönlichen Link, über den er sich
           authentifizieren kann.
-          {!process.env.RESEND_API_KEY && (
-            <span className="block mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg">
-              ⚠️ <strong>RESEND_API_KEY</strong> ist nicht konfiguriert. E-Mails
-              werden nur simuliert (im Log ausgegeben).
-            </span>
-          )}
+          <ResendWarning />
         </p>
       </div>
     </div>
+  );
+}
+
+function ResendWarning() {
+  const [configured, setConfigured] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then((data) => setConfigured(data.resendConfigured))
+      .catch(() => {});
+  }, []);
+
+  if (configured) return null;
+
+  return (
+    <span className="block mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg">
+      ⚠️ <strong>RESEND_API_KEY</strong> ist nicht konfiguriert. E-Mails
+      werden nur simuliert (im Log ausgegeben).
+    </span>
   );
 }

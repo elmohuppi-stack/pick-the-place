@@ -50,8 +50,18 @@ export function CreateEventForm() {
         onClick={() => setShowForm(true)}
         className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all shadow-sm"
       >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        <svg
+          className="w-4 h-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 4.5v15m7.5-7.5h-15"
+          />
         </svg>
         Neues Event
       </button>
@@ -60,7 +70,9 @@ export function CreateEventForm() {
 
   return (
     <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card">
-      <h3 className="text-lg font-semibold text-theme-primary mb-4">Neues Event erstellen</h3>
+      <h3 className="text-lg font-semibold text-theme-primary mb-4">
+        Neues Event erstellen
+      </h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-theme-primary mb-1">
