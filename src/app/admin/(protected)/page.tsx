@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { CreateEventForm } from "./create-event-form";
 
 export default async function AdminDashboardPage() {
   const events = await prisma.event.findMany({
@@ -29,7 +30,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {events.length === 0 && (
-        <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-12 shadow-sm border border-slate-200/60 dark:border-slate-700/60 text-center">
+        <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-12 shadow-sm border border-theme-card text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 mb-4">
             <svg
               className="w-8 h-8 text-indigo-500"
@@ -45,23 +46,23 @@ export default async function AdminDashboardPage() {
               />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
+          <h2 className="text-lg font-semibold text-theme-primary mb-1">
             Noch kein Event
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
+          <p className="text-theme-secondary text-sm mb-6">
             Erstelle ein neues Event, um zu starten.
           </p>
-          <NewEventForm />
+          <CreateEventForm />
         </div>
       )}
 
       {events.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-theme-primary">
               Events
             </h2>
-            <NewEventForm />
+            <CreateEventForm />
           </div>
 
           <div className="grid gap-4">
@@ -69,18 +70,18 @@ export default async function AdminDashboardPage() {
               <Link
                 key={event.id}
                 href={`/admin/rounds?eventId=${event.id}`}
-                className="block bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60 hover:shadow-md transition-all group"
+                className="block bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card hover:shadow-md transition-all group"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    <h3 className="font-semibold text-theme-primary group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                       {event.title}
                     </h3>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-sm text-theme-secondary mt-0.5">
                       {event.description || "Keine Beschreibung"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center gap-4 text-sm text-theme-muted">
                     <span>{event._count.participants} TN</span>
                     <span>{event._count.locations} Orte</span>
                     <span>{event._count.votingRounds} Runden</span>
@@ -107,29 +108,5 @@ export default async function AdminDashboardPage() {
         </div>
       )}
     </div>
-  );
-}
-
-function NewEventForm() {
-  return (
-    <Link
-      href="/admin/rounds"
-      className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all shadow-sm"
-    >
-      <svg
-        className="w-4 h-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M12 4.5v15m7.5-7.5h-15"
-        />
-      </svg>
-      Neues Event
-    </Link>
   );
 }
