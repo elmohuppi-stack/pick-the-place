@@ -61,29 +61,29 @@ export default async function HomePage() {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
             Pick the Place
           </h1>
-          <p className="mt-3 text-slate-600 dark:text-slate-400 text-lg">
+          <p className="mt-3 text-slate-700 dark:text-slate-300 text-lg">
             {event?.title ||
               "Findet gemeinsam den Ort für euer nächstes Jahrestreffen"}
           </p>
         </div>
 
         <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-slate-200/60 dark:border-slate-700/60">
-          <div className="flex items-center justify-center gap-2 text-slate-500 dark:text-slate-400 mb-2">
+          <div className="flex items-center justify-center gap-2 text-slate-800 dark:text-white mb-2">
             <span
               className={`inline-block w-2 h-2 rounded-full ${phaseColors[status]} animate-pulse`}
             />
-            <span className="text-sm font-medium uppercase tracking-wider">
+            <span className="text-sm font-semibold uppercase tracking-wider">
               {phaseLabels[status]}
             </span>
           </div>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-slate-700 dark:text-slate-200">
             {phaseDescriptions[status]}
           </p>
         </div>
 
         <Link
           href="/admin/login"
-          className="inline-flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
         >
           <svg
             className="w-4 h-4"
