@@ -1,0 +1,9 @@
+# Ersetze mit deiner Domain
+# picktheplace.de {
+#     reverse_proxy app:3000
+# }
+
+# Für lokale Entwicklung:
+:80 {
+    reverse_proxy app:3000
+}

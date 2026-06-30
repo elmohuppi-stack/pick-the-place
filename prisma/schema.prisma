@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Event {
+  id          String      @id @default(uuid())
+  title       String
+  slug        String      @unique
+  description String?
+  status      EventStatus @default(setup)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  participants Participant[]
+  locations    Location[]
+  votingRounds VotingRound[]
+}
+
+model Participant {
+  id        String   @id @default(uuid())
+  eventId   String
+  name      String
+  email     String
+  authToken String   @unique
+  createdAt DateTime @default(now())
+
+  event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  locations Location[]
+  votes     Vote[]
+  emailLogs EmailLog[]
+
+  @@unique([eventId, email])
+}
+
+model Location {
+  id            String   @id @default(uuid())
+  eventId       String
+  name          String
+  description   String?
+  proposedById  String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  event      Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  proposedBy Participant @relation(fields: [proposedById], references: [id])
+  votes      Vote[]
+}
+
+model VotingRound {
+  id          String      @id @default(uuid())
+  eventId     String
+  roundNumber Int
+  status      RoundStatus @default(pending)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime    @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  votes Vote[]
+}
+
+model Vote {
+  id            String   @id @default(uuid())
+  votingRoundId String
+  participantId String
+  locationId    String
+  createdAt     DateTime @default(now())
+
+  votingRound VotingRound @relation(fields: [votingRoundId], references: [id], onDelete: Cascade)
+  participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  location    Location    @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([votingRoundId, participantId])
+}
+
+model EmailLog {
+  id            String    @id @default(uuid())
+  participantId String
+  type          EmailType
+  sentAt        DateTime  @default(now())
+
+  participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+}
+
+enum EventStatus {
+  setup
+  proposal
+  voting
+  results
+  closed
+}
+
+enum RoundStatus {
+  pending
+  active
+  closed
+}
+
+enum EmailType {
+  proposal_invite
+  vote_invite
+  results
+}
