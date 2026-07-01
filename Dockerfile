@@ -42,10 +42,6 @@ RUN npm install -g prisma@7.8.0
 COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
-# Copy entrypoint script
-COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
-RUN chmod +x ./entrypoint.sh
-
 EXPOSE 3000
 
 ENV PORT=3000
