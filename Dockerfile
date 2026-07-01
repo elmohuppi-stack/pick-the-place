@@ -38,6 +38,10 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 RUN mkdir -p /app/data
 
+# Copy entrypoint script
+COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
 EXPOSE 3000
 
 ENV PORT=3000
@@ -45,5 +49,4 @@ ENV HOSTNAME="0.0.0.0"
 
 USER nextjs
 
-# Run migration and start
-CMD ["node", "server.js"]
+CMD ["/app/entrypoint.sh"]
