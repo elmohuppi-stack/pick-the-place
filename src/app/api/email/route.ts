@@ -23,7 +23,10 @@ export async function POST(request: NextRequest) {
   });
 
   if (!event) {
-    return NextResponse.json({ error: "Event nicht gefunden" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Event nicht gefunden" },
+      { status: 404 },
+    );
   }
 
   const participants = await prisma.participant.findMany({

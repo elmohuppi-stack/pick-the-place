@@ -8,7 +8,11 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const FROM_EMAIL = process.env.EMAIL_FROM || "onboarding@resend.dev";
 const FROM_NAME = process.env.EMAIL_FROM_NAME || "Pick the Place";
 
-function fillTemplate(template: string, eventTitle: string, name: string): string {
+function fillTemplate(
+  template: string,
+  eventTitle: string,
+  name: string,
+): string {
   return template.replace(/EVENTNAME/g, eventTitle).replace(/NAME/g, name);
 }
 
@@ -19,12 +23,15 @@ export async function sendProposalInvite(
   eventTitle: string,
   customText?: string | null,
 ) {
-  const defaultText = "Du bist eingeladen, einen Ort für das Event EVENTNAME vorzuschlagen.";
+  const defaultText =
+    "Du bist eingeladen, einen Ort für das Event EVENTNAME vorzuschlagen.";
   const bodyText = customText || defaultText;
   const filled = fillTemplate(bodyText, eventTitle, name);
 
   if (!resend) {
-    console.log(`[EMAIL MOCK] Proposal invite to ${email}: ${APP_URL}/propose?token=${token} — "${filled}"`);
+    console.log(
+      `[EMAIL MOCK] Proposal invite to ${email}: ${APP_URL}/propose?token=${token} — "${filled}"`,
+    );
     return { success: true, mocked: true };
   }
 
@@ -63,13 +70,18 @@ export async function sendVoteInvite(
   eventTitle: string,
   customText?: string | null,
 ) {
-  const defaultText = "Runde ROUND der Ortswahl für EVENTNAME ist gestartet! Wähle deinen Favoriten.";
-  const bodyText = (customText || defaultText)
-    .replace(/ROUND/g, String(roundNumber));
+  const defaultText =
+    "Runde ROUND der Ortswahl für EVENTNAME ist gestartet! Wähle deinen Favoriten.";
+  const bodyText = (customText || defaultText).replace(
+    /ROUND/g,
+    String(roundNumber),
+  );
   const filled = fillTemplate(bodyText, eventTitle, name);
 
   if (!resend) {
-    console.log(`[EMAIL MOCK] Vote invite to ${email}: ${APP_URL}/vote?token=${token} — "${filled}"`);
+    console.log(
+      `[EMAIL MOCK] Vote invite to ${email}: ${APP_URL}/vote?token=${token} — "${filled}"`,
+    );
     return { success: true, mocked: true };
   }
 

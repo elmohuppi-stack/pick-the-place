@@ -52,7 +52,9 @@ export default function EmailPage() {
 
   async function fetchTemplates() {
     try {
-      const res = await fetch(`/api/events/templates?eventId=${selectedEventId}`);
+      const res = await fetch(
+        `/api/events/templates?eventId=${selectedEventId}`,
+      );
       if (res.ok) {
         const data = await res.json();
         setTemplates(data);
@@ -174,7 +176,9 @@ export default function EmailPage() {
       {selectedEventId && (
         <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-theme-primary">E-Mail-Texte anpassen</h2>
+            <h2 className="text-lg font-semibold text-theme-primary">
+              E-Mail-Texte anpassen
+            </h2>
             <button
               onClick={saveTemplates}
               disabled={saving}
@@ -184,11 +188,21 @@ export default function EmailPage() {
             </button>
           </div>
           <p className="text-xs text-theme-muted">
-            Verwende <code className="text-indigo-600 dark:text-indigo-400">EVENTNAME</code> für den Event-Namen, <code className="text-indigo-600 dark:text-indigo-400">NAME</code> für den Namen des Teilnehmers und <code className="text-indigo-600 dark:text-indigo-400">ROUND</code> für die Rundennummer. Leer lassen = Standardtext.
+            Verwende{" "}
+            <code className="text-indigo-600 dark:text-indigo-400">
+              EVENTNAME
+            </code>{" "}
+            für den Event-Namen,{" "}
+            <code className="text-indigo-600 dark:text-indigo-400">NAME</code>{" "}
+            für den Namen des Teilnehmers und{" "}
+            <code className="text-indigo-600 dark:text-indigo-400">ROUND</code>{" "}
+            für die Rundennummer. Leer lassen = Standardtext.
           </p>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-theme-primary mb-1">Vorschlag-Text</label>
+              <label className="block text-sm font-medium text-theme-primary mb-1">
+                Vorschlag-Text
+              </label>
               <textarea
                 value={proposalText}
                 onChange={(e) => setProposalText(e.target.value)}
@@ -198,7 +212,9 @@ export default function EmailPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-theme-primary mb-1">Abstimmungs-Text</label>
+              <label className="block text-sm font-medium text-theme-primary mb-1">
+                Abstimmungs-Text
+              </label>
               <textarea
                 value={voteText}
                 onChange={(e) => setVoteText(e.target.value)}
