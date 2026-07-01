@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface EventData {
   id: string;
@@ -19,6 +19,14 @@ interface VotingRoundData {
   endsAt: string | Date | null;
 }
 
+interface RoundResult {
+  id: string;
+  locationName: string;
+  voteCount: number;
+  totalVotes: number;
+  percentage: number;
+}
+
 interface LocationData {
   id: string;
   name: string;
@@ -32,6 +40,29 @@ export function RoundManager({ event }: { event: EventData }) {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [results, setResults] = useState<Record<string, RoundResult[]>>({});
+  const [expandedRound, setExpandedRound] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/results?eventId=${event.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.rounds) {
+          const byRound: Record<string, RoundResult[]> = {};
+          for (const r of data.rounds) {
+            byRound[r.id] = r.locations.map((loc: any) => ({
+              id: loc.id,
+              locationName: loc.name,
+              voteCount: loc.voteCount,
+              totalVotes: r.votes.length,
+              percentage: loc.percentage,
+            }));
+          }
+          setResults(byRound);
+        }
+      })
+      .catch(() => {});
+  }, [event.id]);
 
   async function updateEventStatus(status: string) {
     try {
@@ -190,31 +221,103 @@ export function RoundManager({ event }: { event: EventData }) {
               Bisherige Runden
             </h3>
             <div className="space-y-2">
-              {event.votingRounds.map((round) => (
-                <div
-                  key={round.id}
-                  className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">
-                      Runde {round.roundNumber}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Status: {round.status}
-                      {round.endsAt &&
-                        ` · Ende: ${new Date(round.endsAt).toLocaleDateString("de-DE")}`}
-                    </p>
+              {event.votingRounds.map((round) => {
+                const roundResults = results[round.id];
+                const isExpanded = expandedRound === round.id;
+                const isClosed = round.status === "closed";
+
+                return (
+                  <div
+                    key={round.id}
+                    className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-slate-900 dark:text-white">
+                          Runde {round.roundNumber}
+                        </p>
+                        {isClosed && roundResults && (
+                          <span className="text-xs text-slate-400">
+                            · {roundResults.reduce((s, r) => s + r.voteCount, 0)}{" "}
+                            Stimmen
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {round.status === "closed"
+                            ? "Beendet"
+                            : round.status === "active"
+                              ? "Aktiv"
+                              : round.status}
+                          {round.endsAt &&
+                            ` · ${new Date(round.endsAt).toLocaleDateString("de-DE")}`}
+                        </p>
+                        {round.status === "active" && (
+                          <button
+                            onClick={() => endRound(round.id)}
+                            className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                          >
+                            Beenden
+                          </button>
+                        )}
+                        {isClosed && roundResults && (
+                          <button
+                            onClick={() =>
+                              setExpandedRound(isExpanded ? null : round.id)
+                            }
+                            className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                          >
+                            <svg
+                              className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Results Accordion */}
+                    {isExpanded && roundResults && (
+                      <div className="mt-3 space-y-1.5 pt-3 border-t border-slate-200 dark:border-slate-700">
+                        {roundResults
+                          .sort((a, b) => b.voteCount - a.voteCount)
+                          .map((result) => (
+                            <div key={result.id} className="relative">
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="text-slate-700 dark:text-slate-300 font-medium">
+                                  {result.locationName}
+                                </span>
+                                <span className="text-slate-500 dark:text-slate-400 tabular-nums">
+                                  {result.voteCount} Stimme
+                                  {result.voteCount !== 1 ? "n" : ""} (
+                                  {Math.round(result.percentage)}%)
+                                </span>
+                              </div>
+                              <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
+                                  style={{
+                                    width: `${Math.max(result.percentage, 2)}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
-                  {round.status === "active" && (
-                    <button
-                      onClick={() => endRound(round.id)}
-                      className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                    >
-                      Runde beenden
-                    </button>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
