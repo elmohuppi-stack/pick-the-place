@@ -157,15 +157,19 @@ export default function ParticipantsPage() {
     setMessage({ type: "success", text: "Link kopiert!" });
   }
 
+  const [showAddForms, setShowAddForms] = useState(false);
+
   return (
     <div className="max-w-3xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Teilnehmer
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          Teilnehmer verwalten
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            Teilnehmer
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+            Teilnehmer verwalten
+          </p>
+        </div>
       </div>
 
       {/* Event Selector */}
@@ -200,102 +204,103 @@ export default function ParticipantsPage() {
       )}
 
       {!selectedEventId && (
-        <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-slate-200/60 dark:border-slate-700/60 text-center text-slate-500 dark:text-slate-400">
+        <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-theme-card text-center text-theme-muted">
           Bitte wähle zuerst ein Event aus.
         </div>
       )}
 
       {selectedEventId && (
         <>
-          {/* Add Single Participant */}
-          <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-              Teilnehmer hinzufügen
-            </h2>
-            <form
-              onSubmit={addParticipant}
-              className="flex flex-col sm:flex-row gap-3"
-            >
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                placeholder="Name"
-                required
-              />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                placeholder="E-Mail"
-                required
-              />
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 transition-all"
-              >
-                Hinzufügen
-              </button>
-            </form>
-          </div>
-
-          {/* Bulk Import */}
-          <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-              Mehrere Teilnehmer importieren
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
-              Eine Zeile pro Person:{" "}
-              <code className="text-indigo-600 dark:text-indigo-400">
-                Name, email@example.com
-              </code>
-            </p>
-            <textarea
-              value={bulkInput}
-              onChange={(e) => setBulkInput(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none"
-              rows={5}
-              placeholder="Max Mustermann, max@example.com&#10;Erika Musterfrau, erika@example.com"
-            />
-            <button
-              onClick={addBulkParticipants}
-              disabled={loading || !bulkInput.trim()}
-              className="mt-3 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 transition-all"
-            >
-              Importieren
-            </button>
-          </div>
-
-          {/* Participant List */}
-          <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700/60 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+          {/* Participant List (oben, prominent) */}
+          <div className="bg-theme-card backdrop-blur-sm rounded-2xl shadow-sm border border-theme-card overflow-hidden">
+            <div className="px-6 py-4 border-b border-theme-card flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-theme-primary">
                 Teilnehmer ({participants.length})
               </h2>
+              <button
+                onClick={() => setShowAddForms(!showAddForms)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+              >
+                <svg className={`w-4 h-4 transition-transform ${showAddForms ? "rotate-45" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Hinzufügen
+              </button>
             </div>
+
+            {/* Accordion: Add forms */}
+            {showAddForms && (
+              <div className="px-6 py-5 border-b border-theme-card space-y-6 bg-slate-50/50 dark:bg-slate-900/30">
+                {/* Einzelner Teilnehmer */}
+                <div>
+                  <h3 className="text-sm font-semibold text-theme-primary mb-3">Einzelnen Teilnehmer hinzufügen</h3>
+                  <form onSubmit={addParticipant} className="flex flex-col sm:flex-row gap-3">
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                      placeholder="Name"
+                      required
+                    />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                      placeholder="E-Mail"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 transition-all shrink-0"
+                    >
+                      Hinzufügen
+                    </button>
+                  </form>
+                </div>
+
+                {/* Bulk Import */}
+                <div>
+                  <h3 className="text-sm font-semibold text-theme-primary mb-3">Mehrere Teilnehmer importieren</h3>
+                  <p className="text-xs text-theme-muted mb-2">
+                    Eine Zeile pro Person: <code className="text-indigo-600 dark:text-indigo-400">Name, email@example.com</code>
+                  </p>
+                  <textarea
+                    value={bulkInput}
+                    onChange={(e) => setBulkInput(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none"
+                    rows={4}
+                    placeholder="Max Mustermann, max@example.com&#10;Erika Musterfrau, erika@example.com"
+                  />
+                  <button
+                    onClick={addBulkParticipants}
+                    disabled={loading || !bulkInput.trim()}
+                    className="mt-2 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 transition-all"
+                  >
+                    Importieren
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Teilnehmer-Liste */}
             {participants.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
-                Noch keine Teilnehmer.
+              <div className="p-8 text-center text-theme-muted text-sm">
+                {showAddForms
+                  ? "Füge oben Teilnehmer hinzu."
+                  : "Noch keine Teilnehmer. Klicke auf »Hinzufügen«, um welche einzuladen."}
               </div>
             ) : (
               <div className="divide-y divide-slate-200 dark:divide-slate-700">
                 {participants.map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between px-6 py-3.5"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        {p.name}
-                      </p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {p.email}
-                      </p>
+                  <div key={p.id} className="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-theme-primary truncate">{p.name}</p>
+                      <p className="text-xs text-theme-muted truncate">{p.email}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0 ml-3">
                       <button
                         onClick={() => copyLink(p.authToken)}
                         className="px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
@@ -318,4 +323,3 @@ export default function ParticipantsPage() {
       )}
     </div>
   );
-}

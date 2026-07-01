@@ -76,13 +76,13 @@ export async function POST(request: NextRequest) {
         sent++;
       } else {
         const err = (result as any).error;
-        const reason = typeof err === "string" ? err : err?.message || "Unbekannter Fehler";
+        const reason =
+          typeof err === "string" ? err : err?.message || "Unbekannter Fehler";
         errors.push(`${participant.email}: ${reason}`);
         failed++;
       }
     } catch (err) {
-      const reason =
-        err instanceof Error ? err.message : "Unbekannter Fehler";
+      const reason = err instanceof Error ? err.message : "Unbekannter Fehler";
       errors.push(`${participant.email}: ${reason}`);
       failed++;
     }
