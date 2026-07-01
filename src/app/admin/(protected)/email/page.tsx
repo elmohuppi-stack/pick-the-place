@@ -50,9 +50,16 @@ export default function EmailPage() {
       const data = await res.json();
 
       if (res.ok) {
+        let text = `${data.sent} von ${data.total} E-Mails erfolgreich versendet.`;
+        if (data.failed > 0) {
+          text += ` ${data.failed} fehlgeschlagen.`;
+          if (data.errors?.length) {
+            text += ` Details: ${data.errors.join("; ")}`;
+          }
+        }
         setResult({
-          type: "success",
-          text: `${data.sent} von ${data.total} E-Mails erfolgreich versendet.${data.failed > 0 ? ` (${data.failed} fehlgeschlagen)` : ""}`,
+          type: data.failed > 0 ? "error" : "success",
+          text,
         });
       } else {
         setResult({
@@ -204,8 +211,8 @@ function ResendWarning() {
 
   return (
     <span className="block mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg">
-      ⚠️ <strong>RESEND_API_KEY</strong> ist nicht konfiguriert. E-Mails
-      werden nur simuliert (im Log ausgegeben).
+      ⚠️ <strong>RESEND_API_KEY</strong> ist nicht konfiguriert. E-Mails werden
+      nur simuliert (im Log ausgegeben).
     </span>
   );
 }

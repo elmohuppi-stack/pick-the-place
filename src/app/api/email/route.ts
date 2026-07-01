@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
 
   let sent = 0;
   let failed = 0;
+  const errors: string[] = [];
 
   for (const participant of participants) {
     try {
@@ -74,9 +75,17 @@ export async function POST(request: NextRequest) {
         });
         sent++;
       } else {
+        const reason =
+          typeof result.error === "string"
+            ? result.error
+            : result.error?.message || "Unbekannter Fehler";
+        errors.push(`${participant.email}: ${reason}`);
         failed++;
       }
-    } catch {
+    } catch (err) {
+      const reason =
+        err instanceof Error ? err.message : "Unbekannter Fehler";
+      errors.push(`${participant.email}: ${reason}`);
       failed++;
     }
   }
@@ -86,5 +95,6 @@ export async function POST(request: NextRequest) {
     sent,
     failed,
     total: participants.length,
+    errors: errors.length > 0 ? errors : undefined,
   });
 }
