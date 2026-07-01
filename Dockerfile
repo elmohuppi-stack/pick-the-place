@@ -30,18 +30,17 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma/migrations ./prisma/migrations
 COPY --from=builder /app/prisma/schema.prisma ./prisma/schema.prisma
-COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/prisma.config.cjs ./prisma.config.cjs
 COPY --from=builder /app/src/generated ./src/generated
 
 RUN mkdir -p /app/data
 
-# Copy prisma CLI from builder for runtime migrations
-# Copy all @prisma packages except client and adapter-libsql (already in standalone)
-COPY --from=builder /app/node_modules/prisma /app/node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
-RUN rm -rf /app/node_modules/@prisma/client /app/node_modules/@prisma/adapter-libsql && \
-    mkdir -p /app/node_modules/.bin && \
-    ln -sf /app/node_modules/prisma/build/index.js /app/node_modules/.bin/prisma
+# Install prisma CLI globally for runtime migrations
+RUN npm install -g prisma@7.8.0
+
+# Copy entrypoint script
+COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
 # Copy entrypoint script
 COPY --from=builder /app/entrypoint.sh ./entrypoint.sh

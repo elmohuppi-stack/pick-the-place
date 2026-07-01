@@ -2,7 +2,7 @@
 set -e
 
 echo "=== Running Prisma migrations ==="
-./node_modules/.bin/prisma migrate deploy
+prisma --config prisma.config.cjs migrate deploy
 
 echo "=== Starting Next.js server ==="
 exec node server.js
