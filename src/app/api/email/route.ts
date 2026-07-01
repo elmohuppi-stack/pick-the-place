@@ -17,6 +17,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { title: true, proposalEmailText: true, voteEmailText: true },
+  });
+
+  if (!event) {
+    return NextResponse.json({ error: "Event nicht gefunden" }, { status: 404 });
+  }
+
   const participants = await prisma.participant.findMany({
     where: { eventId },
   });
@@ -41,6 +50,8 @@ export async function POST(request: NextRequest) {
           participant.email,
           participant.name,
           participant.authToken,
+          event.title,
+          event.proposalEmailText,
         );
       } else if (type === "vote") {
         // Find the latest active voting round
@@ -61,6 +72,8 @@ export async function POST(request: NextRequest) {
           participant.name,
           participant.authToken,
           round.roundNumber,
+          event.title,
+          event.voteEmailText,
         );
       } else {
         return NextResponse.json({ error: "Ungültiger Typ" }, { status: 400 });

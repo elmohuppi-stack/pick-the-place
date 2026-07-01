@@ -221,8 +221,18 @@ export default function ParticipantsPage() {
                 onClick={() => setShowAddForms(!showAddForms)}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
               >
-                <svg className={`w-4 h-4 transition-transform ${showAddForms ? "rotate-45" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                <svg
+                  className={`w-4 h-4 transition-transform ${showAddForms ? "rotate-45" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4.5v15m7.5-7.5h-15"
+                  />
                 </svg>
                 Hinzufügen
               </button>
@@ -233,8 +243,13 @@ export default function ParticipantsPage() {
               <div className="px-6 py-5 border-b border-theme-card space-y-6 bg-slate-50/50 dark:bg-slate-900/30">
                 {/* Einzelner Teilnehmer */}
                 <div>
-                  <h3 className="text-sm font-semibold text-theme-primary mb-3">Einzelnen Teilnehmer hinzufügen</h3>
-                  <form onSubmit={addParticipant} className="flex flex-col sm:flex-row gap-3">
+                  <h3 className="text-sm font-semibold text-theme-primary mb-3">
+                    Einzelnen Teilnehmer hinzufügen
+                  </h3>
+                  <form
+                    onSubmit={addParticipant}
+                    className="flex flex-col sm:flex-row gap-3"
+                  >
                     <input
                       type="text"
                       value={name}
@@ -263,9 +278,14 @@ export default function ParticipantsPage() {
 
                 {/* Bulk Import */}
                 <div>
-                  <h3 className="text-sm font-semibold text-theme-primary mb-3">Mehrere Teilnehmer importieren</h3>
+                  <h3 className="text-sm font-semibold text-theme-primary mb-3">
+                    Mehrere Teilnehmer importieren
+                  </h3>
                   <p className="text-xs text-theme-muted mb-2">
-                    Eine Zeile pro Person: <code className="text-indigo-600 dark:text-indigo-400">Name, email@example.com</code>
+                    Eine Zeile pro Person:{" "}
+                    <code className="text-indigo-600 dark:text-indigo-400">
+                      Name, email@example.com
+                    </code>
                   </p>
                   <textarea
                     value={bulkInput}
@@ -295,10 +315,17 @@ export default function ParticipantsPage() {
             ) : (
               <div className="divide-y divide-slate-200 dark:divide-slate-700">
                 {participants.map((p) => (
-                  <div key={p.id} className="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                  >
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-theme-primary truncate">{p.name}</p>
-                      <p className="text-xs text-theme-muted truncate">{p.email}</p>
+                      <p className="text-sm font-medium text-theme-primary truncate">
+                        {p.name}
+                      </p>
+                      <p className="text-xs text-theme-muted truncate">
+                        {p.email}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-3">
                       <button

@@ -9,9 +9,20 @@ interface EventSummary {
   _count: { participants: number };
 }
 
+interface EventTemplates {
+  id: string;
+  title: string;
+  proposalEmailText: string | null;
+  voteEmailText: string | null;
+}
+
 export default function EmailPage() {
   const [events, setEvents] = useState<EventSummary[]>([]);
   const [selectedEventId, setSelectedEventId] = useState("");
+  const [templates, setTemplates] = useState<EventTemplates | null>(null);
+  const [proposalText, setProposalText] = useState("");
+  const [voteText, setVoteText] = useState("");
+  const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{
     type: "success" | "error";
@@ -21,6 +32,10 @@ export default function EmailPage() {
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  useEffect(() => {
+    if (selectedEventId) fetchTemplates();
+  }, [selectedEventId]);
 
   async function fetchEvents() {
     try {
@@ -32,6 +47,45 @@ export default function EmailPage() {
       }
     } catch {
       console.error("Failed to fetch events");
+    }
+  }
+
+  async function fetchTemplates() {
+    try {
+      const res = await fetch(`/api/events/templates?eventId=${selectedEventId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTemplates(data);
+        setProposalText(data.proposalEmailText || "");
+        setVoteText(data.voteEmailText || "");
+      }
+    } catch {
+      console.error("Failed to fetch templates");
+    }
+  }
+
+  async function saveTemplates() {
+    setSaving(true);
+    setResult(null);
+    try {
+      const res = await fetch("/api/events/templates", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          eventId: selectedEventId,
+          proposalEmailText: proposalText || null,
+          voteEmailText: voteText || null,
+        }),
+      });
+      if (res.ok) {
+        setResult({ type: "success", text: "Texte gespeichert!" });
+      } else {
+        setResult({ type: "error", text: "Fehler beim Speichern" });
+      }
+    } catch {
+      setResult({ type: "error", text: "Ein Fehler ist aufgetreten" });
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -116,9 +170,50 @@ export default function EmailPage() {
         </div>
       )}
 
+      {/* Email Text Templates */}
+      {selectedEventId && (
+        <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-theme-primary">E-Mail-Texte anpassen</h2>
+            <button
+              onClick={saveTemplates}
+              disabled={saving}
+              className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 transition-all"
+            >
+              {saving ? "Wird gespeichert..." : "Speichern"}
+            </button>
+          </div>
+          <p className="text-xs text-theme-muted">
+            Verwende <code className="text-indigo-600 dark:text-indigo-400">EVENTNAME</code> für den Event-Namen, <code className="text-indigo-600 dark:text-indigo-400">NAME</code> für den Namen des Teilnehmers und <code className="text-indigo-600 dark:text-indigo-400">ROUND</code> für die Rundennummer. Leer lassen = Standardtext.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="block text-sm font-medium text-theme-primary mb-1">Vorschlag-Text</label>
+              <textarea
+                value={proposalText}
+                onChange={(e) => setProposalText(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none"
+                rows={3}
+                placeholder="Du bist eingeladen, einen Ort für das Event EVENTNAME vorzuschlagen."
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-theme-primary mb-1">Abstimmungs-Text</label>
+              <textarea
+                value={voteText}
+                onChange={(e) => setVoteText(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none"
+                rows={3}
+                placeholder="Runde ROUND der Ortswahl für EVENTNAME ist gestartet!"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2">
         {/* Proposal Invites */}
-        <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60">
+        <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card">
           <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-4">
             <svg
               className="w-6 h-6 text-amber-600 dark:text-amber-400"
