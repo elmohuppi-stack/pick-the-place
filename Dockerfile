@@ -35,8 +35,9 @@ COPY --from=builder /app/src/generated ./src/generated
 
 RUN mkdir -p /app/data
 
-# Install prisma CLI locally (needed by prisma.config.ts and migrate)
-RUN npm install prisma@7.8.0 --no-save
+# Copy prisma CLI + config module from builder for runtime migrations
+COPY --from=builder /app/node_modules/prisma /app/node_modules/prisma
+COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
 
 # Copy entrypoint script
 COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
