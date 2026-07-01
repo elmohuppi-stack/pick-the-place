@@ -6,6 +6,9 @@ export default async function RoundsPage() {
     include: {
       votingRounds: {
         orderBy: { roundNumber: "desc" },
+        include: {
+          _count: { select: { votes: true } },
+        },
       },
       locations: {
         where: { isActive: true },

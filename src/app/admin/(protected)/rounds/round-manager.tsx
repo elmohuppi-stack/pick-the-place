@@ -17,6 +17,7 @@ interface VotingRoundData {
   status: string;
   startsAt: string | Date | null;
   endsAt: string | Date | null;
+  _count: { votes: number };
 }
 
 interface RoundResult {
@@ -131,6 +132,31 @@ export function RoundManager({ event }: { event: EventData }) {
     }
   }
 
+  async function deleteRound(roundId: string) {
+    if (
+      !confirm(
+        "Runde wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      )
+    )
+      return;
+
+    try {
+      const res = await fetch(`/api/rounds?id=${roundId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        setMessage({ type: "success", text: "Runde gelöscht!" });
+        window.location.reload();
+      } else {
+        const data = await res.json();
+        setMessage({ type: "error", text: data.error || "Fehler" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Ein Fehler ist aufgetreten" });
+    }
+  }
+
   const activeLocations = event.locations.filter((l) => true); // All included since query already filters isActive
 
   return (
@@ -179,20 +205,50 @@ export function RoundManager({ event }: { event: EventData }) {
       <div className="p-6 space-y-4">
         {/* Status Controls */}
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => updateEventStatus("proposal")}
-            disabled={eventStatus === "proposal"}
-            className="px-4 py-2 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-slate-700 dark:text-slate-300"
-          >
-            Vorschlagsphase aktivieren
-          </button>
-          <button
-            onClick={startNewRound}
-            disabled={eventStatus === "voting" || activeLocations.length === 0}
-            className="px-4 py-2 text-sm font-medium rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            Neue Abstimmungsrunde starten
-          </button>
+          {eventStatus === "proposal" ? (
+            <button
+              onClick={() => updateEventStatus("setup")}
+              className="px-4 py-2 text-sm font-medium rounded-xl border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+            >
+              Vorschlagsphase deaktivieren
+            </button>
+          ) : (
+            <button
+              onClick={() => updateEventStatus("proposal")}
+              disabled={eventStatus === "proposal"}
+              className="px-4 py-2 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-slate-700 dark:text-slate-300"
+            >
+              Vorschlagsphase aktivieren
+            </button>
+          )}
+          {eventStatus === "voting" ? (
+            <button
+              onClick={async () => {
+                // Close active round if exists, then set event status
+                const activeRound = event.votingRounds.find(
+                  (r) => r.status === "active",
+                );
+                if (activeRound) {
+                  await endRound(activeRound.id);
+                } else {
+                  await updateEventStatus("results");
+                }
+              }}
+              className="px-4 py-2 text-sm font-medium rounded-xl border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              Abstimmungsphase beenden
+            </button>
+          ) : (
+            <button
+              onClick={startNewRound}
+              disabled={
+                eventStatus === "voting" || activeLocations.length === 0
+              }
+              className="px-4 py-2 text-sm font-medium rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              Neue Abstimmungsrunde starten
+            </button>
+          )}
         </div>
 
         {/* Active Locations */}
@@ -236,11 +292,10 @@ export function RoundManager({ event }: { event: EventData }) {
                         <p className="text-sm font-medium text-slate-900 dark:text-white">
                           Runde {round.roundNumber}
                         </p>
-                        {isClosed && roundResults && (
+                        {isClosed && (
                           <span className="text-xs text-slate-400">
-                            ·{" "}
-                            {roundResults.reduce((s, r) => s + r.voteCount, 0)}{" "}
-                            Stimmen
+                            · {round._count.votes} Stimme
+                            {round._count.votes !== 1 ? "n" : ""}
                           </span>
                         )}
                       </div>
@@ -262,6 +317,17 @@ export function RoundManager({ event }: { event: EventData }) {
                             Beenden
                           </button>
                         )}
+                        {(round.status === "closed" ||
+                          round.status === "active" ||
+                          round.status === "pending") &&
+                          round._count.votes === 0 && (
+                            <button
+                              onClick={() => deleteRound(round.id)}
+                              className="px-3 py-1.5 text-xs font-medium text-slate-500 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                            >
+                              Löschen
+                            </button>
+                          )}
                         {isClosed && roundResults && (
                           <button
                             onClick={() =>

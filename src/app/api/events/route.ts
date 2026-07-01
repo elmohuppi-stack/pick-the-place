@@ -45,3 +45,20 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json(event, { status: 201 });
 }
+
+export async function DELETE(request: NextRequest) {
+  const session = await getAdminSession();
+  if (!session)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "id erforderlich" }, { status: 400 });
+  }
+
+  await prisma.event.delete({ where: { id } });
+
+  return NextResponse.json({ success: true });
+}

@@ -122,3 +122,39 @@ export async function PATCH(request: NextRequest) {
 
   return NextResponse.json(round);
 }
+
+export async function DELETE(request: NextRequest) {
+  const session = await getAdminSession();
+  if (!session)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "id erforderlich" }, { status: 400 });
+  }
+
+  const round = await prisma.votingRound.findUnique({
+    where: { id },
+    include: { _count: { select: { votes: true } } },
+  });
+
+  if (!round) {
+    return NextResponse.json(
+      { error: "Runde nicht gefunden" },
+      { status: 404 },
+    );
+  }
+
+  if (round._count.votes > 0) {
+    return NextResponse.json(
+      { error: "Runde mit Abstimmungen kann nicht gelöscht werden" },
+      { status: 400 },
+    );
+  }
+
+  await prisma.votingRound.delete({ where: { id } });
+
+  return NextResponse.json({ success: true });
+}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { CreateEventForm } from "./create-event-form";
+import { DeleteEventButton } from "./delete-event-button";
 
 export default async function AdminDashboardPage() {
   const events = await prisma.event.findMany({
@@ -65,42 +66,46 @@ export default async function AdminDashboardPage() {
 
           <div className="grid gap-4">
             {events.map((event) => (
-              <Link
-                key={event.id}
-                href={`/admin/rounds?eventId=${event.id}`}
-                className="block bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card hover:shadow-md transition-all group"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-theme-primary group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                      {event.title}
-                    </h3>
-                    <p className="text-sm text-theme-secondary mt-0.5">
-                      {event.description || "Keine Beschreibung"}
-                    </p>
+              <div key={event.id} className="relative group">
+                <Link
+                  href={`/admin/rounds?eventId=${event.id}`}
+                  className="block bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-theme-primary group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        {event.title}
+                      </h3>
+                      <p className="text-sm text-theme-secondary mt-0.5">
+                        {event.description || "Keine Beschreibung"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-theme-muted">
+                      <span>{event._count.participants} TN</span>
+                      <span>{event._count.locations} Orte</span>
+                      <span>{event._count.votingRounds} Runden</span>
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          event.status === "setup"
+                            ? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
+                            : event.status === "proposal"
+                              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                              : event.status === "voting"
+                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                : event.status === "results"
+                                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                                  : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                        }`}
+                      >
+                        {event.status}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-theme-muted">
-                    <span>{event._count.participants} TN</span>
-                    <span>{event._count.locations} Orte</span>
-                    <span>{event._count.votingRounds} Runden</span>
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        event.status === "setup"
-                          ? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                          : event.status === "proposal"
-                            ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                            : event.status === "voting"
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : event.status === "results"
-                                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                                : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                      }`}
-                    >
-                      {event.status}
-                    </span>
-                  </div>
+                </Link>
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <DeleteEventButton eventId={event.id} />
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </div>
