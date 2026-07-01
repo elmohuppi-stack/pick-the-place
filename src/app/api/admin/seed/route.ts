@@ -14,7 +14,10 @@ export async function POST() {
 
   if (!adminEmail || !adminPassword) {
     return NextResponse.json(
-      { error: "ADMIN_EMAIL und ADMIN_PASSWORD in .env.production nicht gesetzt" },
+      {
+        error:
+          "ADMIN_EMAIL und ADMIN_PASSWORD in .env.production nicht gesetzt",
+      },
       { status: 400 },
     );
   }
