@@ -356,9 +356,7 @@ export default function AdminUsersPage() {
         </div>
 
         {loading ? (
-          <div className="p-6 text-center text-sm text-slate-500">
-            Lade...
-          </div>
+          <div className="p-6 text-center text-sm text-slate-500">Lade...</div>
         ) : users.length === 0 ? (
           <div className="p-6 text-center text-sm text-slate-500">
             Keine Benutzer gefunden
@@ -403,9 +401,7 @@ export default function AdminUsersPage() {
                       <input
                         type="password"
                         value={changePasswordValue}
-                        onChange={(e) =>
-                          setChangePasswordValue(e.target.value)
-                        }
+                        onChange={(e) => setChangePasswordValue(e.target.value)}
                         className="w-28 px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
                         placeholder="Neues PW"
                         minLength={8}

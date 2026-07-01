@@ -157,14 +157,27 @@ export default async function AdminLayout({
             </span>
           </div>
           {/* Mobile Nav */}
-          <div className="flex gap-0.5 overflow-x-auto -mr-2 pr-2">
+          <div className="flex gap-1 overflow-x-auto -mr-2 pr-2">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="px-2 py-1 rounded-md text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors whitespace-nowrap"
+                title={item.label}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors shrink-0"
               >
-                {item.label}
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d={item.icon}
+                  />
+                </svg>
               </Link>
             ))}
           </div>

@@ -69,7 +69,9 @@ export default function AdminLoginPage() {
       });
 
       if (res.ok) {
-        setSuccess("Passwort erfolgreich zurückgesetzt! Du kannst dich jetzt anmelden.");
+        setSuccess(
+          "Passwort erfolgreich zurückgesetzt! Du kannst dich jetzt anmelden.",
+        );
         setNewPassword("");
         setConfirmPassword("");
         // Remove reset token from URL
@@ -92,8 +94,18 @@ export default function AdminLoginPage() {
         <div className="max-w-sm w-full">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 mb-4">
-              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
+              <svg
+                className="w-7 h-7 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"
+                />
               </svg>
             </div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
@@ -104,29 +116,73 @@ export default function AdminLoginPage() {
             </p>
           </div>
 
-          <form onSubmit={handleResetPassword} className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60 space-y-4">
+          <form
+            onSubmit={handleResetPassword}
+            className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60 space-y-4"
+          >
             <div>
-              <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label
+                htmlFor="newPassword"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              >
                 Neues Passwort
               </label>
-              <input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="••••••••" required minLength={8} />
+              <input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                placeholder="••••••••"
+                required
+                minLength={8}
+              />
             </div>
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              >
                 Passwort bestätigen
               </label>
-              <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="••••••••" required minLength={8} />
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                placeholder="••••••••"
+                required
+                minLength={8}
+              />
             </div>
 
-            {error && <div className="p-3 rounded-xl text-sm bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400">{error}</div>}
-            {success && <div className="p-3 rounded-xl text-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">{success}</div>}
+            {error && (
+              <div className="p-3 rounded-xl text-sm bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                {error}
+              </div>
+            )}
+            {success && (
+              <div className="p-3 rounded-xl text-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                {success}
+              </div>
+            )}
 
-            <button type="submit" disabled={loading} className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 transition-all">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 transition-all"
+            >
               {loading ? "Wird zurückgesetzt..." : "Passwort zurücksetzen"}
             </button>
 
             <p className="text-center text-xs text-slate-500 dark:text-slate-400">
-              <a href="/admin/login" className="text-indigo-500 hover:underline">Zurück zum Login</a>
+              <a
+                href="/admin/login"
+                className="text-indigo-500 hover:underline"
+              >
+                Zurück zum Login
+              </a>
             </p>
           </form>
         </div>
