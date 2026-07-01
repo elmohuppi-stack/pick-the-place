@@ -36,8 +36,14 @@ COPY --from=builder /app/src/generated ./src/generated
 RUN mkdir -p /app/data
 
 # Copy prisma CLI + config module from builder for runtime migrations
+# Only copy additional @prisma packages not already in standalone
 COPY --from=builder /app/node_modules/prisma /app/node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
+COPY --from=builder /app/node_modules/@prisma/config /app/node_modules/@prisma/config
+COPY --from=builder /app/node_modules/@prisma/debug /app/node_modules/@prisma/debug
+COPY --from=builder /app/node_modules/@prisma/engines /app/node_modules/@prisma/engines
+COPY --from=builder /app/node_modules/@prisma/engines-version /app/node_modules/@prisma/engines-version
+COPY --from=builder /app/node_modules/@prisma/fetch-engine /app/node_modules/@prisma/fetch-engine
+COPY --from=builder /app/node_modules/@prisma/get-platform /app/node_modules/@prisma/get-platform
 
 # Copy entrypoint script
 COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
