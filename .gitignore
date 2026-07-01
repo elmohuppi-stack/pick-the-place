@@ -28,7 +28,6 @@
 # database
 *.db
 *.db-journal
-prisma/migrations/
 
 # generated
 src/generated/
