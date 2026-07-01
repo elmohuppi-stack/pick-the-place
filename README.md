@@ -21,17 +21,17 @@ Das Tool begleitet eine Gruppe von der **Vorschlagsphase** („Wo sollen wir uns
 
 ## Tech Stack
 
-| Technologie     | Beschreibung                                     |
-| --------------- | ------------------------------------------------ |
-| **Next.js 16**  | React-Framework mit App-Router                   |
-| **TypeScript**  | Typensicherheit                                  |
-| **Tailwind CSS 4** | Utility-first Styling                         |
-| **Prisma 7**    | ORM mit SQLite (via libSQL)                      |
-| **SQLite**      | Datenbank (kein separater DB-Server nötig)       |
-| **Resend**      | E-Mail-Versand                                   |
-| **JWT**         | Admin-Authentifizierung                          |
-| **bcryptjs**    | Passwort-Hashing                                 |
-| **Docker**      | Containerisierung für Produktion                 |
+| Technologie        | Beschreibung                               |
+| ------------------ | ------------------------------------------ |
+| **Next.js 16**     | React-Framework mit App-Router             |
+| **TypeScript**     | Typensicherheit                            |
+| **Tailwind CSS 4** | Utility-first Styling                      |
+| **Prisma 7**       | ORM mit SQLite (via libSQL)                |
+| **SQLite**         | Datenbank (kein separater DB-Server nötig) |
+| **Resend**         | E-Mail-Versand                             |
+| **JWT**            | Admin-Authentifizierung                    |
+| **bcryptjs**       | Passwort-Hashing                           |
+| **Docker**         | Containerisierung für Produktion           |
 
 ---
 
@@ -70,29 +70,29 @@ Der Dev-Server läuft auf [http://localhost:3000](http://localhost:3000).
 
 ### Nützliche Befehle
 
-| Befehl                   | Beschreibung                                |
-| ------------------------ | ------------------------------------------- |
-| `npm run dev`            | Dev-Server starten                          |
-| `npm run build`          | Production-Build erstellen                  |
-| `npm run start`          | Production-Server starten                   |
-| `npm run lint`           | ESLint ausführen                            |
-| `npx prisma studio`      | Prisma Studio (GUI für die Datenbank)       |
-| `npx prisma migrate dev` | Migration nach Schema-Änderung              |
-| `npx prisma generate`    | Prisma Client neu generieren                |
+| Befehl                   | Beschreibung                          |
+| ------------------------ | ------------------------------------- |
+| `npm run dev`            | Dev-Server starten                    |
+| `npm run build`          | Production-Build erstellen            |
+| `npm run start`          | Production-Server starten             |
+| `npm run lint`           | ESLint ausführen                      |
+| `npx prisma studio`      | Prisma Studio (GUI für die Datenbank) |
+| `npx prisma migrate dev` | Migration nach Schema-Änderung        |
+| `npx prisma generate`    | Prisma Client neu generieren          |
 
 ### Umgebungsvariablen
 
-| Variable               | Beschreibung                      |
-| ---------------------- | --------------------------------- |
-| `DATABASE_URL`         | Pfad zur SQLite-Datenbank         |
-| `ADMIN_EMAIL`          | Admin-Login E-Mail                |
-| `ADMIN_PASSWORD`       | Admin-Login Passwort              |
-| `ADMIN_NAME`           | Admin-Anzeigename                 |
-| `JWT_SECRET`           | Secret für JWT-Tokens             |
-| `RESEND_API_KEY`       | API-Key für Resend                |
-| `EMAIL_FROM`           | Absenderadresse für E-Mails       |
-| `EMAIL_FROM_NAME`      | Absendername für E-Mails          |
-| `NEXT_PUBLIC_APP_URL`  | Öffentliche App-URL               |
+| Variable              | Beschreibung                |
+| --------------------- | --------------------------- |
+| `DATABASE_URL`        | Pfad zur SQLite-Datenbank   |
+| `ADMIN_EMAIL`         | Admin-Login E-Mail          |
+| `ADMIN_PASSWORD`      | Admin-Login Passwort        |
+| `ADMIN_NAME`          | Admin-Anzeigename           |
+| `JWT_SECRET`          | Secret für JWT-Tokens       |
+| `RESEND_API_KEY`      | API-Key für Resend          |
+| `EMAIL_FROM`          | Absenderadresse für E-Mails |
+| `EMAIL_FROM_NAME`     | Absendername für E-Mails    |
+| `NEXT_PUBLIC_APP_URL` | Öffentliche App-URL         |
 
 ---
 
@@ -112,7 +112,7 @@ Das Docker-Image führt beim Start automatisch `prisma migrate deploy` aus, um d
 - **Server:** Hetzner (single root server)
 - **Proxy:** Host-Nginx leitet Subdomains auf interne Docker-Ports weiter
 - **TLS:** Let's Encrypt via Certbot
-- **DNS:** Spaceship (A @ und A * auf Server-IP)
+- **DNS:** Spaceship (A @ und A \* auf Server-IP)
 
 ---
 
