@@ -34,21 +34,28 @@ export async function PATCH(request: NextRequest) {
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { eventId, proposalEmailText, voteEmailText } = await request.json();
+  try {
+    const { eventId, proposalEmailText, voteEmailText } = await request.json();
 
-  if (!eventId)
-    return NextResponse.json(
-      { error: "eventId erforderlich" },
-      { status: 400 },
-    );
+    if (!eventId)
+      return NextResponse.json(
+        { error: "eventId erforderlich" },
+        { status: 400 },
+      );
 
-  const event = await prisma.event.update({
-    where: { id: eventId },
-    data: {
-      ...(proposalEmailText !== undefined ? { proposalEmailText } : {}),
-      ...(voteEmailText !== undefined ? { voteEmailText } : {}),
-    },
-  });
+    const data: Record<string, string | null> = {};
+    if (proposalEmailText !== undefined) data.proposalEmailText = proposalEmailText;
+    if (voteEmailText !== undefined) data.voteEmailText = voteEmailText;
 
-  return NextResponse.json(event);
+    const event = await prisma.event.update({
+      where: { id: eventId },
+      data,
+    });
+
+    return NextResponse.json(event);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unbekannter Fehler";
+    console.error("Failed to save templates:", err);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

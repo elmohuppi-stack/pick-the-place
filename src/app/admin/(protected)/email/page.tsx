@@ -82,10 +82,11 @@ export default function EmailPage() {
       if (res.ok) {
         setResult({ type: "success", text: "Texte gespeichert!" });
       } else {
-        setResult({ type: "error", text: "Fehler beim Speichern" });
+        const errData = await res.json().catch(() => ({}));
+        setResult({ type: "error", text: `Fehler: ${errData.error || `${res.status} ${res.statusText}`}` });
       }
-    } catch {
-      setResult({ type: "error", text: "Ein Fehler ist aufgetreten" });
+    } catch (err) {
+      setResult({ type: "error", text: `Fehler: ${err instanceof Error ? err.message : "Unbekannt"}` });
     } finally {
       setSaving(false);
     }
