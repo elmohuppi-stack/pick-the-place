@@ -1,17 +1,26 @@
 "use client";
 
-import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useState, FormEvent, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function AdminLoginPage() {
+  const searchParams = useSearchParams();
+  const resetToken = searchParams.get("reset");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Reset password state
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
   const router = useRouter();
 
-  async function handleSubmit(e: FormEvent) {
+  async function handleLogin(e: FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -34,6 +43,95 @@ export default function AdminLoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleResetPassword(e: FormEvent) {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (newPassword !== confirmPassword) {
+      setError("Die Passwörter stimmen nicht überein");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError("Passwort muss mindestens 8 Zeichen lang sein");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/users/verify-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: resetToken, newPassword }),
+      });
+
+      if (res.ok) {
+        setSuccess("Passwort erfolgreich zurückgesetzt! Du kannst dich jetzt anmelden.");
+        setNewPassword("");
+        setConfirmPassword("");
+        // Remove reset token from URL
+        window.history.replaceState({}, "", "/admin/login");
+      } else {
+        const data = await res.json();
+        setError(data.error || "Reset fehlgeschlagen");
+      }
+    } catch {
+      setError("Ein Fehler ist aufgetreten");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // If we have a reset token, show the reset form
+  if (resetToken) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-sm w-full">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 mb-4">
+              <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              Passwort zurücksetzen
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Wähle ein neues Passwort
+            </p>
+          </div>
+
+          <form onSubmit={handleResetPassword} className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60 space-y-4">
+            <div>
+              <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Neues Passwort
+              </label>
+              <input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="••••••••" required minLength={8} />
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Passwort bestätigen
+              </label>
+              <input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all" placeholder="••••••••" required minLength={8} />
+            </div>
+
+            {error && <div className="p-3 rounded-xl text-sm bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400">{error}</div>}
+            {success && <div className="p-3 rounded-xl text-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">{success}</div>}
+
+            <button type="submit" disabled={loading} className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 transition-all">
+              {loading ? "Wird zurückgesetzt..." : "Passwort zurücksetzen"}
+            </button>
+
+            <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+              <a href="/admin/login" className="text-indigo-500 hover:underline">Zurück zum Login</a>
+            </p>
+          </form>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -69,7 +167,7 @@ export default function AdminLoginPage() {
         </div>
 
         <form
-          onSubmit={handleSubmit}
+          onSubmit={handleLogin}
           className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60 space-y-4"
         >
           <div>

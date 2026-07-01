@@ -238,7 +238,8 @@ export function RoundManager({ event }: { event: EventData }) {
                         </p>
                         {isClosed && roundResults && (
                           <span className="text-xs text-slate-400">
-                            · {roundResults.reduce((s, r) => s + r.voteCount, 0)}{" "}
+                            ·{" "}
+                            {roundResults.reduce((s, r) => s + r.voteCount, 0)}{" "}
                             Stimmen
                           </span>
                         )}
