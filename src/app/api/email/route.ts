@@ -75,10 +75,10 @@ export async function POST(request: NextRequest) {
         });
         sent++;
       } else {
-        const reason =
-          typeof result.error === "string"
-            ? result.error
-            : result.error?.message || "Unbekannter Fehler";
+        const errObj = result.error as { message?: string } | undefined;
+        const reason = typeof result.error === "string"
+          ? result.error
+          : errObj?.message || "Unbekannter Fehler";
         errors.push(`${participant.email}: ${reason}`);
         failed++;
       }
