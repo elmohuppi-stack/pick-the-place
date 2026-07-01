@@ -33,7 +33,7 @@ COPY --from=builder /app/prisma/schema.prisma ./prisma/schema.prisma
 COPY --from=builder /app/prisma.config.cjs ./prisma.config.cjs
 COPY --from=builder /app/src/generated ./src/generated
 
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data && chown -R nextjs:nodejs /app/data
 
 # Install prisma CLI globally for runtime migrations
 RUN npm install -g prisma@7.8.0
