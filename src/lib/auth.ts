@@ -11,21 +11,31 @@ export interface AdminSession {
   name: string;
 }
 
-/** Seed initial admin from env vars if AdminUser table is empty */
+/** Ensure env-var admin exists; updates password if already present */
 async function ensureAdminSeeded(): Promise<void> {
-  const count = await prisma.adminUser.count();
-  if (count > 0) return;
-
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
   const adminName = process.env.ADMIN_NAME || "Admin";
 
   if (!adminEmail || !adminPassword) return;
 
-  const passwordHash = await bcrypt.hash(adminPassword, 12);
-  await prisma.adminUser.create({
-    data: { email: adminEmail, name: adminName, passwordHash },
+  const existing = await prisma.adminUser.findUnique({
+    where: { email: adminEmail },
   });
+
+  const passwordHash = await bcrypt.hash(adminPassword, 12);
+
+  if (existing) {
+    // Update password hash in case env changed
+    await prisma.adminUser.update({
+      where: { email: adminEmail },
+      data: { passwordHash, name: adminName },
+    });
+  } else {
+    await prisma.adminUser.create({
+      data: { email: adminEmail, name: adminName, passwordHash },
+    });
+  }
 }
 
 export async function verifyAdminCredentials(

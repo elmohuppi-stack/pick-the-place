@@ -198,12 +198,35 @@ export default function AdminUsersPage() {
             Admin-Benutzer hinzufügen, entfernen und Passwörter verwalten
           </p>
         </div>
-        <button
-          onClick={() => setShowOwnPasswordForm(!showOwnPasswordForm)}
-          className="px-4 py-2 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-700 dark:text-slate-300"
-        >
-          Eigenes Passwort ändern
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={async () => {
+              setMessage(null);
+              try {
+                const res = await fetch("/api/admin/seed", { method: "POST" });
+                const data = await res.json();
+                if (res.ok) {
+                  setMessage({ type: "success", text: data.message });
+                  fetchUsers();
+                } else {
+                  setMessage({ type: "error", text: data.error });
+                }
+              } catch {
+                setMessage({ type: "error", text: "Fehler" });
+              }
+            }}
+            className="px-3 py-2 text-sm font-medium rounded-xl border border-amber-200 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-colors text-amber-700 dark:text-amber-400"
+            title="Admin aus .env.production seeden"
+          >
+            Admin seeden
+          </button>
+          <button
+            onClick={() => setShowOwnPasswordForm(!showOwnPasswordForm)}
+            className="px-4 py-2 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-700 dark:text-slate-300"
+          >
+            Eigenes PW ändern
+          </button>
+        </div>
       </div>
 
       {message && (
