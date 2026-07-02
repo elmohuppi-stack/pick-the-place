@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface Location {
   id: string;
@@ -11,27 +11,21 @@ interface Location {
   proposedBy: { name: string };
 }
 
-interface EventSummary {
-  id: string;
-  title: string;
-  status: string;
-}
-
-export function LocationManager({ event }: { event: EventSummary }) {
+export function LocationManager({ eventId }: { eventId: string }) {
   const [locations, setLocations] = useState<Location[]>([]);
 
-  useEffect(() => {
-    fetchLocations();
-  }, [event.id]);
-
-  async function fetchLocations() {
+  const fetchLocations = useCallback(async () => {
     try {
-      const res = await fetch(`/api/locations?eventId=${event.id}`);
+      const res = await fetch(`/api/locations?eventId=${eventId}`);
       if (res.ok) setLocations(await res.json());
     } catch {
       console.error("Failed to fetch locations");
     }
-  }
+  }, [eventId]);
+
+  useEffect(() => {
+    fetchLocations();
+  }, [fetchLocations]);
 
   async function toggleActive(id: string, isActive: boolean) {
     try {
@@ -48,15 +42,13 @@ export function LocationManager({ event }: { event: EventSummary }) {
 
   return (
     <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700/60 overflow-hidden">
-      <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            {event.title}
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Status: {event.status}
-          </p>
-        </div>
+      <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+          Orte
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          Häkchen = Ort steht in der Abstimmung zur Wahl
+        </p>
       </div>
 
       {locations.length === 0 ? (

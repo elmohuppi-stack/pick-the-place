@@ -1,70 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
-interface EventSummary {
-  id: string;
-  title: string;
-  status: string;
-  _count: { participants: number };
-}
-
-interface EventTemplates {
+interface EventInfo {
   id: string;
   title: string;
   proposalEmailText: string | null;
   voteEmailText: string | null;
 }
 
-export default function EmailPage() {
-  const [events, setEvents] = useState<EventSummary[]>([]);
-  const [selectedEventId, setSelectedEventId] = useState("");
-  const [templates, setTemplates] = useState<EventTemplates | null>(null);
-  const [proposalText, setProposalText] = useState("");
-  const [voteText, setVoteText] = useState("");
+export function EmailManager({ event }: { event: EventInfo }) {
+  const [proposalText, setProposalText] = useState(
+    event.proposalEmailText || "",
+  );
+  const [voteText, setVoteText] = useState(event.voteEmailText || "");
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
-
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  useEffect(() => {
-    if (selectedEventId) fetchTemplates();
-  }, [selectedEventId]);
-
-  async function fetchEvents() {
-    try {
-      const res = await fetch("/api/events");
-      if (res.ok) {
-        const data = await res.json();
-        setEvents(data);
-        if (data.length > 0) setSelectedEventId(data[0].id);
-      }
-    } catch {
-      console.error("Failed to fetch events");
-    }
-  }
-
-  async function fetchTemplates() {
-    try {
-      const res = await fetch(
-        `/api/events/templates?eventId=${selectedEventId}`,
-      );
-      if (res.ok) {
-        const data = await res.json();
-        setTemplates(data);
-        setProposalText(data.proposalEmailText || "");
-        setVoteText(data.voteEmailText || "");
-      }
-    } catch {
-      console.error("Failed to fetch templates");
-    }
-  }
 
   async function saveTemplates() {
     setSaving(true);
@@ -74,7 +29,7 @@ export default function EmailPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          eventId: selectedEventId,
+          eventId: event.id,
           proposalEmailText: proposalText || null,
           voteEmailText: voteText || null,
         }),
@@ -83,17 +38,22 @@ export default function EmailPage() {
         setResult({ type: "success", text: "Texte gespeichert!" });
       } else {
         const errData = await res.json().catch(() => ({}));
-        setResult({ type: "error", text: `Fehler: ${errData.error || `${res.status} ${res.statusText}`}` });
+        setResult({
+          type: "error",
+          text: `Fehler: ${errData.error || `${res.status} ${res.statusText}`}`,
+        });
       }
     } catch (err) {
-      setResult({ type: "error", text: `Fehler: ${err instanceof Error ? err.message : "Unbekannt"}` });
+      setResult({
+        type: "error",
+        text: `Fehler: ${err instanceof Error ? err.message : "Unbekannt"}`,
+      });
     } finally {
       setSaving(false);
     }
   }
 
   async function sendEmails(type: "proposal" | "vote") {
-    if (!selectedEventId) return;
     setSending(true);
     setResult(null);
 
@@ -101,7 +61,7 @@ export default function EmailPage() {
       const res = await fetch("/api/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: selectedEventId, type }),
+        body: JSON.stringify({ eventId: event.id, type }),
       });
 
       const data = await res.json();
@@ -114,10 +74,7 @@ export default function EmailPage() {
             text += ` Details: ${data.errors.join("; ")}`;
           }
         }
-        setResult({
-          type: data.failed > 0 ? "error" : "success",
-          text,
-        });
+        setResult({ type: data.failed > 0 ? "error" : "success", text });
       } else {
         setResult({
           type: "error",
@@ -132,35 +89,7 @@ export default function EmailPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          E-Mails versenden
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-          Einladungen an alle Teilnehmer verschicken
-        </p>
-      </div>
-
-      {/* Event Selection */}
-      <div className="flex items-center gap-3">
-        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          Event:
-        </label>
-        <select
-          value={selectedEventId}
-          onChange={(e) => setSelectedEventId(e.target.value)}
-          className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-revenexx-500 outline-none"
-        >
-          <option value="">Bitte wählen</option>
-          {events.map((ev) => (
-            <option key={ev.id} value={ev.id}>
-              {ev.title} ({ev._count?.participants || 0} TN)
-            </option>
-          ))}
-        </select>
-      </div>
-
+    <div className="space-y-6">
       {result && (
         <div
           className={`p-3 rounded-xl text-sm ${
@@ -173,63 +102,59 @@ export default function EmailPage() {
         </div>
       )}
 
-      {/* Email Text Templates */}
-      {selectedEventId && (
-        <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-theme-primary">
-              E-Mail-Texte anpassen
-            </h2>
-            <button
-              onClick={saveTemplates}
-              disabled={saving}
-              className="px-4 py-2 btn btn-primary text-sm disabled:opacity-50"
-            >
-              {saving ? "Wird gespeichert..." : "Speichern"}
-            </button>
+      <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-theme-primary">
+            E-Mail-Texte anpassen
+          </h2>
+          <button
+            onClick={saveTemplates}
+            disabled={saving}
+            className="px-4 py-2 btn btn-primary text-sm disabled:opacity-50"
+          >
+            {saving ? "Wird gespeichert..." : "Speichern"}
+          </button>
+        </div>
+        <p className="text-xs text-theme-muted">
+          Verwende{" "}
+          <code className="text-revenexx-600 dark:text-revenexx-400">
+            EVENTNAME
+          </code>{" "}
+          für den Event-Namen,{" "}
+          <code className="text-revenexx-600 dark:text-revenexx-400">NAME</code>{" "}
+          für den Namen des Teilnehmers und{" "}
+          <code className="text-revenexx-600 dark:text-revenexx-400">ROUND</code>{" "}
+          für die Rundennummer. Leer lassen = Standardtext.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-theme-primary mb-1">
+              Vorschlag-Text
+            </label>
+            <textarea
+              value={proposalText}
+              onChange={(e) => setProposalText(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm resize-none"
+              rows={3}
+              placeholder="Du bist eingeladen, einen Ort für das Event EVENTNAME vorzuschlagen."
+            />
           </div>
-          <p className="text-xs text-theme-muted">
-            Verwende{" "}
-            <code className="text-revenexx-600 dark:text-revenexx-400">
-              EVENTNAME
-            </code>{" "}
-            für den Event-Namen,{" "}
-            <code className="text-revenexx-600 dark:text-revenexx-400">NAME</code>{" "}
-            für den Namen des Teilnehmers und{" "}
-            <code className="text-revenexx-600 dark:text-revenexx-400">ROUND</code>{" "}
-            für die Rundennummer. Leer lassen = Standardtext.
-          </p>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium text-theme-primary mb-1">
-                Vorschlag-Text
-              </label>
-              <textarea
-                value={proposalText}
-                onChange={(e) => setProposalText(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm resize-none"
-                rows={3}
-                placeholder="Du bist eingeladen, einen Ort für das Event EVENTNAME vorzuschlagen."
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-theme-primary mb-1">
-                Abstimmungs-Text
-              </label>
-              <textarea
-                value={voteText}
-                onChange={(e) => setVoteText(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm resize-none"
-                rows={3}
-                placeholder="Runde ROUND der Ortswahl für EVENTNAME ist gestartet!"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-theme-primary mb-1">
+              Abstimmungs-Text
+            </label>
+            <textarea
+              value={voteText}
+              onChange={(e) => setVoteText(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm resize-none"
+              rows={3}
+              placeholder="Runde ROUND der Ortswahl für EVENTNAME ist gestartet!"
+            />
           </div>
         </div>
-      )}
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Proposal Invites */}
         <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card">
           <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-4">
             <svg
@@ -254,14 +179,13 @@ export default function EmailPage() {
           </p>
           <button
             onClick={() => sendEmails("proposal")}
-            disabled={sending || !selectedEventId}
+            disabled={sending}
             className="w-full py-2.5 px-4 btn btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {sending ? "Wird gesendet..." : "Einladungen senden"}
           </button>
         </div>
 
-        {/* Vote Invites */}
         <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60">
           <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
             <svg
@@ -286,7 +210,7 @@ export default function EmailPage() {
           </p>
           <button
             onClick={() => sendEmails("vote")}
-            disabled={sending || !selectedEventId}
+            disabled={sending}
             className="w-full py-2.5 px-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-medium rounded-xl hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {sending ? "Wird gesendet..." : "Einladungen senden"}
@@ -312,12 +236,16 @@ export default function EmailPage() {
 function ResendWarning() {
   const [configured, setConfigured] = useState(true);
 
-  useEffect(() => {
+  const check = useCallback(() => {
     fetch("/api/config")
       .then((r) => r.json())
       .then((data) => setConfigured(data.resendConfigured))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    check();
+  }, [check]);
 
   if (configured) return null;
 

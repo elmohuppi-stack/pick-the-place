@@ -3,7 +3,17 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { prisma } from "./prisma";
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-change-me";
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error(
+      "JWT_SECRET ist nicht gesetzt. Bitte in der Umgebung konfigurieren (siehe .env.example).",
+    );
+  }
+  return secret;
+}
+
+const JWT_SECRET = getJwtSecret();
 
 export interface AdminSession {
   id: string;

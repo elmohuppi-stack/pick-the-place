@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { statusLabel, statusBadgeClasses } from "@/lib/event-status";
 import { CreateEventForm } from "./create-event-form";
 import { DeleteEventButton } from "./delete-event-button";
 
@@ -68,7 +69,7 @@ export default async function AdminDashboardPage() {
             {events.map((event) => (
               <div key={event.id} className="relative group">
                 <Link
-                  href={`/admin/rounds?eventId=${event.id}`}
+                  href={`/admin/events/${event.id}`}
                   className="block bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card hover:shadow-md transition-all"
                 >
                   <div className="flex items-center justify-between">
@@ -85,19 +86,9 @@ export default async function AdminDashboardPage() {
                       <span>{event._count.locations} Orte</span>
                       <span>{event._count.votingRounds} Runden</span>
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          event.status === "setup"
-                            ? "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300"
-                            : event.status === "proposal"
-                              ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                              : event.status === "voting"
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : event.status === "results"
-                                  ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                                  : "bg-revenexx-100 text-revenexx-700 dark:bg-revenexx-900/30 dark:text-revenexx-400"
-                        }`}
+                        className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadgeClasses(event.status)}`}
                       >
-                        {event.status}
+                        {statusLabel(event.status)}
                       </span>
                     </div>
                   </div>
