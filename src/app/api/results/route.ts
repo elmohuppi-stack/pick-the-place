@@ -15,36 +15,47 @@ export async function GET(request: NextRequest) {
   const rounds = await prisma.votingRound.findMany({
     where: { eventId },
     include: {
-      votes: true,
+      votes: { include: { location: true } },
     },
     orderBy: { roundNumber: "asc" },
   });
 
-  const locations = await prisma.location.findMany({
-    where: { eventId, isActive: true, name: { not: "__optout__" } },
-  });
-
   const roundsWithResults = rounds.map((round) => {
-    const totalVotes = round.votes.length;
+    // Ergebnisse aus den tatsächlich in DIESER Runde abgegebenen Stimmen
+    // ableiten — nicht aus den aktuell aktiven Orten. So bleibt jede Runde
+    // korrekt, auch wenn Orte später (z. B. für eine Stichwahl) de-/aktiviert
+    // werden.
+    const realVotes = round.votes.filter(
+      (v) => v.location && v.location.name !== "__optout__",
+    );
+    const totalVotes = realVotes.length;
 
-    const locationResults = locations.map((loc) => {
-      const voteCount = round.votes.filter(
-        (v) => v.locationId === loc.id,
-      ).length;
-      return {
+    const byLocation = new Map<
+      string,
+      { id: string; name: string; description: string | null; voteCount: number }
+    >();
+    for (const vote of realVotes) {
+      const loc = vote.location!;
+      const entry = byLocation.get(loc.id) ?? {
         id: loc.id,
         name: loc.name,
         description: loc.description,
-        voteCount,
-        percentage: totalVotes > 0 ? (voteCount / totalVotes) * 100 : 0,
+        voteCount: 0,
       };
-    });
+      entry.voteCount += 1;
+      byLocation.set(loc.id, entry);
+    }
+
+    const locationResults = Array.from(byLocation.values()).map((loc) => ({
+      ...loc,
+      percentage: totalVotes > 0 ? (loc.voteCount / totalVotes) * 100 : 0,
+    }));
 
     return {
       id: round.id,
       roundNumber: round.roundNumber,
       status: round.status,
-      votes: round.votes,
+      votes: realVotes.map((v) => ({ locationId: v.locationId })),
       locations: locationResults,
     };
   });

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { cookies } from "next/headers";
 import ThemeToggle from "@/components/ThemeToggle";
+import { LegalFooter } from "@/components/ui/LegalFooter";
 import "./globals.css";
 
 const flink = localFont({
@@ -78,6 +79,7 @@ export default async function RootLayout({
       >
         <ThemeToggle />
         <main className="flex-1 flex flex-col">{children}</main>
+        <LegalFooter />
       </body>
     </html>
   );
