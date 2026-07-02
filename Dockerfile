@@ -12,6 +12,8 @@ RUN npm ci --only=production
 FROM base AS builder
 WORKDIR /app
 COPY package.json package-lock.json* ./
+COPY prisma/schema.prisma ./prisma/schema.prisma
+COPY prisma.config.ts prisma.config.cjs ./
 RUN npm ci
 COPY . .
 RUN npx prisma generate
