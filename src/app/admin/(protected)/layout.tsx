@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAdminSession } from "@/lib/auth";
+import { PoweredByRevenexx } from "@/components/ui/Brand";
 
 export default async function AdminLayout({
   children,
@@ -51,7 +52,7 @@ export default async function AdminLayout({
       {/* Sidebar - Desktop */}
       <nav className="hidden md:flex flex-col w-64 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-r border-slate-200 dark:border-slate-700 p-4">
         <div className="flex items-center gap-3 px-3 py-4 mb-6">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-revenexx-500 to-revenexx-600 flex items-center justify-center">
             <svg
               className="w-4 h-4 text-white"
               fill="none"
@@ -86,7 +87,7 @@ export default async function AdminLayout({
             <Link
               key={item.href}
               href={item.href}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-revenexx-50 dark:hover:bg-revenexx-900/30 hover:text-revenexx-600 dark:hover:text-revenexx-400 transition-colors"
             >
               <svg
                 className="w-5 h-5 shrink-0"
@@ -125,6 +126,10 @@ export default async function AdminLayout({
           </svg>
           Zurück zur App
         </Link>
+
+        <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 px-3">
+          <PoweredByRevenexx />
+        </div>
       </nav>
 
       {/* Content */}
@@ -132,7 +137,7 @@ export default async function AdminLayout({
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between px-3 py-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-1.5 shrink-0">
-            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-revenexx-500 to-revenexx-600 flex items-center justify-center">
               <svg
                 className="w-3 h-3 text-white"
                 fill="none"
@@ -163,7 +168,7 @@ export default async function AdminLayout({
                 key={item.href}
                 href={item.href}
                 title={item.label}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors shrink-0"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-revenexx-50 dark:hover:bg-revenexx-900/30 hover:text-revenexx-600 dark:hover:text-revenexx-400 transition-colors shrink-0"
               >
                 <svg
                   className="w-4 h-4"

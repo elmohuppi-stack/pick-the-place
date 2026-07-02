@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { PoweredByRevenexx } from "@/components/ui/Brand";
 
 export default function AdminLoginPage() {
   const searchParams = useSearchParams();
@@ -93,7 +94,7 @@ export default function AdminLoginPage() {
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="max-w-sm w-full">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/25 mb-4">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-revenexx-500 to-revenexx-700 shadow-lg shadow-revenexx-500/25 mb-4">
               <svg
                 className="w-7 h-7 text-white"
                 fill="none"
@@ -132,7 +133,7 @@ export default function AdminLoginPage() {
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none transition-all"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -150,7 +151,7 @@ export default function AdminLoginPage() {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none transition-all"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -171,7 +172,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-4 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 transition-all"
+              className="w-full px-4 py-2.5 text-sm btn btn-primary disabled:opacity-50"
             >
               {loading ? "Wird zurückgesetzt..." : "Passwort zurücksetzen"}
             </button>
@@ -179,7 +180,7 @@ export default function AdminLoginPage() {
             <p className="text-center text-xs text-slate-500 dark:text-slate-400">
               <a
                 href="/admin/login"
-                className="text-indigo-500 hover:underline"
+                className="text-revenexx-500 hover:underline"
               >
                 Zurück zum Login
               </a>
@@ -194,7 +195,7 @@ export default function AdminLoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-sm w-full">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/25 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-revenexx-500 to-revenexx-600 shadow-lg shadow-revenexx-500/25 mb-4">
             <svg
               className="w-7 h-7 text-white"
               fill="none"
@@ -238,7 +239,7 @@ export default function AdminLoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none transition-all"
               placeholder="admin@example.com"
               required
             />
@@ -257,7 +258,7 @@ export default function AdminLoginPage() {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 pr-11 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-2.5 pr-11 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none transition-all"
                 placeholder="••••••••"
                 required
               />
@@ -314,11 +315,15 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+            className="w-full py-2.5 px-4 btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Wird angemeldet..." : "Anmelden"}
           </button>
         </form>
+
+        <div className="flex justify-center mt-6">
+          <PoweredByRevenexx />
+        </div>
       </div>
     </div>
   );

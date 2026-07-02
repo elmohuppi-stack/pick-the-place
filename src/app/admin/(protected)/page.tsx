@@ -32,9 +32,9 @@ export default async function AdminDashboardPage() {
 
       {events.length === 0 && (
         <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-12 shadow-sm border border-theme-card text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-revenexx-100 dark:bg-revenexx-900/30 mb-4">
             <svg
-              className="w-8 h-8 text-indigo-500"
+              className="w-8 h-8 text-revenexx-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -73,7 +73,7 @@ export default async function AdminDashboardPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold text-theme-primary group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      <h3 className="font-semibold text-theme-primary group-hover:text-revenexx-600 dark:group-hover:text-revenexx-400 transition-colors">
                         {event.title}
                       </h3>
                       <p className="text-sm text-theme-secondary mt-0.5">
@@ -94,7 +94,7 @@ export default async function AdminDashboardPage() {
                                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                                 : event.status === "results"
                                   ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                                  : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                                  : "bg-revenexx-100 text-revenexx-700 dark:bg-revenexx-900/30 dark:text-revenexx-400"
                         }`}
                       >
                         {event.status}

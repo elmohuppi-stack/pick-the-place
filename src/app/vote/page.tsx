@@ -8,7 +8,7 @@ export default function VotePageWrapper() {
     <Suspense
       fallback={
         <div className="flex-1 flex items-center justify-center px-4">
-          <div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" />
+          <div className="animate-spin w-8 h-8 border-4 border-revenexx-500 border-t-transparent rounded-full" />
         </div>
       }
     >
@@ -141,7 +141,7 @@ function VotePage() {
   if (!participant) {
     return (
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-revenexx-500 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -241,15 +241,15 @@ function VotePage() {
               onClick={() => setSelectedLocationId(loc.id)}
               className={`w-full text-left p-4 rounded-2xl border-2 transition-all ${
                 selectedLocationId === loc.id
-                  ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 shadow-md"
-                  : "border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/50 hover:border-indigo-300 dark:hover:border-indigo-600"
+                  ? "border-revenexx-500 bg-revenexx-50 dark:bg-revenexx-900/20 shadow-md"
+                  : "border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/50 hover:border-revenexx-300 dark:hover:border-revenexx-600"
               }`}
             >
               <div className="flex items-center gap-4">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                     selectedLocationId === loc.id
-                      ? "bg-indigo-500 text-white"
+                      ? "bg-revenexx-500 text-white"
                       : "bg-slate-100 dark:bg-slate-700 text-slate-400"
                   }`}
                 >
@@ -308,7 +308,7 @@ function VotePage() {
         <button
           onClick={handleVote}
           disabled={loading}
-          className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 transition-all text-lg"
+          className="w-full py-3 btn btn-primary disabled:opacity-50 text-lg"
         >
           {loading ? "Wird gesendet..." : "Jetzt abstimmen"}
         </button>

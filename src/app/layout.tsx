@@ -1,17 +1,42 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { cookies } from "next/headers";
 import ThemeToggle from "@/components/ThemeToggle";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
+const flink = localFont({
+  variable: "--font-flink",
+  display: "swap",
+  src: [
+    {
+      path: "../../public/fonts/flink-neue/FlinkNeueCnd-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/flink-neue/FlinkNeueCnd-Medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/flink-neue/FlinkNeueCnd-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/flink-neue/FlinkNeueCnd-Black.woff2",
+      weight: "900",
+      style: "normal",
+    },
+  ],
 });
 
 export const metadata: Metadata = {
   title: "Pick the Place",
   description: "Findet gemeinsam den Ort für euer nächstes Jahrestreffen",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default async function RootLayout({
@@ -26,7 +51,7 @@ export default async function RootLayout({
   return (
     <html
       lang="de"
-      className={`${inter.variable} h-full antialiased${isDark ? " dark" : ""}`}
+      className={`${flink.variable} h-full antialiased${isDark ? " dark" : ""}`}
       suppressHydrationWarning
     >
       <head>

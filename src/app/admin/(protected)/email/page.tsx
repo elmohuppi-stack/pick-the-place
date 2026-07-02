@@ -150,7 +150,7 @@ export default function EmailPage() {
         <select
           value={selectedEventId}
           onChange={(e) => setSelectedEventId(e.target.value)}
-          className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-revenexx-500 outline-none"
         >
           <option value="">Bitte wählen</option>
           {events.map((ev) => (
@@ -183,20 +183,20 @@ export default function EmailPage() {
             <button
               onClick={saveTemplates}
               disabled={saving}
-              className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 transition-all"
+              className="px-4 py-2 btn btn-primary text-sm disabled:opacity-50"
             >
               {saving ? "Wird gespeichert..." : "Speichern"}
             </button>
           </div>
           <p className="text-xs text-theme-muted">
             Verwende{" "}
-            <code className="text-indigo-600 dark:text-indigo-400">
+            <code className="text-revenexx-600 dark:text-revenexx-400">
               EVENTNAME
             </code>{" "}
             für den Event-Namen,{" "}
-            <code className="text-indigo-600 dark:text-indigo-400">NAME</code>{" "}
+            <code className="text-revenexx-600 dark:text-revenexx-400">NAME</code>{" "}
             für den Namen des Teilnehmers und{" "}
-            <code className="text-indigo-600 dark:text-indigo-400">ROUND</code>{" "}
+            <code className="text-revenexx-600 dark:text-revenexx-400">ROUND</code>{" "}
             für die Rundennummer. Leer lassen = Standardtext.
           </p>
           <div className="grid gap-4 md:grid-cols-2">
@@ -207,7 +207,7 @@ export default function EmailPage() {
               <textarea
                 value={proposalText}
                 onChange={(e) => setProposalText(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm resize-none"
                 rows={3}
                 placeholder="Du bist eingeladen, einen Ort für das Event EVENTNAME vorzuschlagen."
               />
@@ -219,7 +219,7 @@ export default function EmailPage() {
               <textarea
                 value={voteText}
                 onChange={(e) => setVoteText(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm resize-none"
                 rows={3}
                 placeholder="Runde ROUND der Ortswahl für EVENTNAME ist gestartet!"
               />
@@ -255,7 +255,7 @@ export default function EmailPage() {
           <button
             onClick={() => sendEmails("proposal")}
             disabled={sending || !selectedEventId}
-            className="w-full py-2.5 px-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm font-medium rounded-xl hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full py-2.5 px-4 btn btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {sending ? "Wird gesendet..." : "Einladungen senden"}
           </button>

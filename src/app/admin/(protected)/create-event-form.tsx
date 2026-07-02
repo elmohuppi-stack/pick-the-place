@@ -48,7 +48,7 @@ export function CreateEventForm() {
     return (
       <button
         onClick={() => setShowForm(true)}
-        className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all shadow-sm"
+        className="inline-flex items-center gap-2 px-4 py-2.5 btn btn-primary text-sm"
       >
         <svg
           className="w-4 h-4"
@@ -82,7 +82,7 @@ export function CreateEventForm() {
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm"
             placeholder="z.B. Jahrestreffen 2026"
             required
             autoFocus
@@ -96,7 +96,7 @@ export function CreateEventForm() {
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm"
             placeholder="Kurze Beschreibung"
           />
         </div>
@@ -111,7 +111,7 @@ export function CreateEventForm() {
           <button
             type="submit"
             disabled={loading || !title.trim()}
-            className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 transition-all"
+            className="px-6 py-2.5 btn btn-primary text-sm disabled:opacity-50"
           >
             {loading ? "Wird erstellt..." : "Erstellen"}
           </button>
