@@ -180,7 +180,7 @@ export default function ParticipantsPage() {
         <select
           value={selectedEventId}
           onChange={(e) => setSelectedEventId(e.target.value)}
-          className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-revenexx-500 outline-none"
         >
           <option value="">Bitte wählen</option>
           {events.map((ev) => (
@@ -219,7 +219,7 @@ export default function ParticipantsPage() {
               </h2>
               <button
                 onClick={() => setShowAddForms(!showAddForms)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-revenexx-600 dark:text-revenexx-400 hover:bg-revenexx-50 dark:hover:bg-revenexx-900/30 rounded-lg transition-colors"
               >
                 <svg
                   className={`w-4 h-4 transition-transform ${showAddForms ? "rotate-45" : ""}`}
@@ -254,7 +254,7 @@ export default function ParticipantsPage() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm"
                       placeholder="Name"
                       required
                     />
@@ -262,14 +262,14 @@ export default function ParticipantsPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                      className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm"
                       placeholder="E-Mail"
                       required
                     />
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 transition-all shrink-0"
+                      className="px-6 py-2.5 btn btn-primary text-sm disabled:opacity-50 shrink-0"
                     >
                       Hinzufügen
                     </button>
@@ -283,21 +283,21 @@ export default function ParticipantsPage() {
                   </h3>
                   <p className="text-xs text-theme-muted mb-2">
                     Eine Zeile pro Person:{" "}
-                    <code className="text-indigo-600 dark:text-indigo-400">
+                    <code className="text-revenexx-600 dark:text-revenexx-400">
                       Name, email@example.com
                     </code>
                   </p>
                   <textarea
                     value={bulkInput}
                     onChange={(e) => setBulkInput(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm resize-none"
                     rows={4}
                     placeholder="Max Mustermann, max@example.com&#10;Erika Musterfrau, erika@example.com"
                   />
                   <button
                     onClick={addBulkParticipants}
                     disabled={loading || !bulkInput.trim()}
-                    className="mt-2 px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 transition-all"
+                    className="mt-2 px-6 py-2.5 btn btn-primary text-sm disabled:opacity-50"
                   >
                     Importieren
                   </button>
@@ -330,7 +330,7 @@ export default function ParticipantsPage() {
                     <div className="flex items-center gap-2 shrink-0 ml-3">
                       <button
                         onClick={() => copyLink(p.authToken)}
-                        className="px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+                        className="px-3 py-1.5 text-xs font-medium text-revenexx-600 dark:text-revenexx-400 hover:bg-revenexx-50 dark:hover:bg-revenexx-900/30 rounded-lg transition-colors"
                       >
                         Link kopieren
                       </button>

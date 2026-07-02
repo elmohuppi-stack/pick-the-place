@@ -182,7 +182,7 @@ export function RoundManager({ event }: { event: EventData }) {
                     ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
                     : eventStatus === "results"
                       ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                      : "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                      : "bg-revenexx-100 text-revenexx-700 dark:bg-revenexx-900/30 dark:text-revenexx-400"
             }`}
           >
             {eventStatus}
@@ -244,7 +244,7 @@ export function RoundManager({ event }: { event: EventData }) {
               disabled={
                 eventStatus === "voting" || activeLocations.length === 0
               }
-              className="px-4 py-2 text-sm font-medium rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="px-4 py-2 text-sm btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Neue Abstimmungsrunde starten
             </button>
@@ -261,7 +261,7 @@ export function RoundManager({ event }: { event: EventData }) {
               {activeLocations.map((loc) => (
                 <span
                   key={loc.id}
-                  className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 text-sm rounded-lg"
+                  className="px-3 py-1.5 bg-revenexx-50 dark:bg-revenexx-900/20 text-revenexx-700 dark:text-revenexx-300 text-sm rounded-lg"
                 >
                   {loc.name}
                 </span>
@@ -372,7 +372,7 @@ export function RoundManager({ event }: { event: EventData }) {
                               </div>
                               <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                                 <div
-                                  className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all"
+                                  className="h-full rounded-full bg-gradient-to-r from-revenexx-500 to-revenexx-500 transition-all"
                                   style={{
                                     width: `${Math.max(result.percentage, 2)}%`,
                                   }}

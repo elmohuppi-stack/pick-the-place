@@ -8,7 +8,7 @@ export default function ProposePageWrapper() {
     <Suspense
       fallback={
         <div className="flex-1 flex items-center justify-center px-4">
-          <div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" />
+          <div className="animate-spin w-8 h-8 border-4 border-revenexx-500 border-t-transparent rounded-full" />
         </div>
       }
     >
@@ -146,7 +146,7 @@ function ProposePage() {
   if (!participant) {
     return (
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-revenexx-500 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -221,9 +221,9 @@ function ProposePage() {
                 key={loc.id}
                 className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl"
               >
-                <div className="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-revenexx-100 dark:bg-revenexx-900/30 flex items-center justify-center shrink-0">
                   <svg
-                    className="w-4 h-4 text-indigo-600 dark:text-indigo-400"
+                    className="w-4 h-4 text-revenexx-600 dark:text-revenexx-400"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -275,7 +275,7 @@ function ProposePage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm"
                 placeholder="z.B. Barcelona, Spanien"
                 required
               />
@@ -287,7 +287,7 @@ function ProposePage() {
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm resize-none"
                 rows={3}
                 placeholder="Ideales Wetter, tolle Location, ..."
               />
@@ -295,7 +295,7 @@ function ProposePage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 transition-all"
+              className="w-full py-2.5 btn btn-primary disabled:opacity-50"
             >
               {loading ? "Wird gesendet..." : "Ort vorschlagen"}
             </button>

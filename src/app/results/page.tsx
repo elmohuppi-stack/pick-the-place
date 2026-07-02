@@ -8,7 +8,7 @@ export default function ResultsPageWrapper() {
     <Suspense
       fallback={
         <div className="flex-1 flex items-center justify-center px-4">
-          <div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" />
+          <div className="animate-spin w-8 h-8 border-4 border-revenexx-500 border-t-transparent rounded-full" />
         </div>
       }
     >
@@ -81,7 +81,7 @@ function ResultsPage() {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="animate-spin w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-4 border-revenexx-500 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -116,7 +116,7 @@ function ResultsPage() {
               onClick={() => setSelectedRound(i)}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                 selectedRound === i
-                  ? "bg-indigo-500 text-white shadow-sm"
+                  ? "bg-revenexx-500 text-white shadow-sm"
                   : "bg-white/70 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
               }`}
             >
@@ -134,7 +134,7 @@ function ResultsPage() {
         <>
           {/* Winner announcement */}
           {winner && (
-            <div className="bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 rounded-2xl p-8 text-center text-white shadow-lg">
+            <div className="bg-gradient-to-r from-revenexx-500 to-revenexx-700 rounded-2xl p-8 text-center text-white shadow-lg">
               <p className="text-sm font-medium uppercase tracking-wider opacity-90">
                 🏆 Sieger
               </p>
@@ -174,7 +174,7 @@ function ResultsPage() {
                             ? "bg-gradient-to-r from-green-400 to-emerald-500"
                             : loc.percentage === 0
                               ? "bg-slate-300 dark:bg-slate-600"
-                              : "bg-gradient-to-r from-indigo-400 to-purple-500"
+                              : "bg-gradient-to-r from-revenexx-400 to-revenexx-500"
                         }`}
                         style={{
                           width: `${(loc.voteCount / maxVotes) * 100}%`,

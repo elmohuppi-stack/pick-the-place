@@ -43,13 +43,15 @@ export async function sendProposalInvite(
     subject,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-        <h1 style="color: #4f46e5;">Hallo ${name}!</h1>
+        <h1 style="color: #620DFF;">Hallo ${name}!</h1>
         <p>${filled}</p>
         <p>Klicke auf den Button, um deinen Vorschlag einzureichen oder zu sehen, welche Orte schon vorgeschlagen wurden:</p>
-        <a href="${APP_URL}/propose?token=${token}" style="display: inline-block; background: #4f46e5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 16px 0;">
+        <a href="${APP_URL}/propose?token=${token}" style="display: inline-block; background: #620DFF; color: white; padding: 12px 24px; border-radius: 9999px; text-decoration: none; margin: 16px 0;">
           Ort vorschlagen
         </a>
         <p style="color: #6b7280; font-size: 14px;">Dieser Link ist persönlich und nur für dich bestimmt.</p>
+        <hr style="border:none;border-top:1px solid #EDECF3;margin:24px 0 12px;" />
+        <p style="color:#9a94ac;font-size:12px;margin:0;">Pick the Place · <span style="color:#620DFF;font-weight:bold;">revenexx</span></p>
       </div>
     `,
   });
@@ -93,13 +95,15 @@ export async function sendVoteInvite(
     subject,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-        <h1 style="color: #4f46e5;">Hallo ${name}!</h1>
+        <h1 style="color: #620DFF;">Hallo ${name}!</h1>
         <p>${filled}</p>
         <p>Wähle deinen Favoriten aus den vorgeschlagenen Orten:</p>
-        <a href="${APP_URL}/vote?token=${token}" style="display: inline-block; background: #4f46e5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 16px 0;">
+        <a href="${APP_URL}/vote?token=${token}" style="display: inline-block; background: #620DFF; color: white; padding: 12px 24px; border-radius: 9999px; text-decoration: none; margin: 16px 0;">
           Jetzt abstimmen
         </a>
         <p style="color: #6b7280; font-size: 14px;">Dieser Link ist persönlich und nur für dich bestimmt.</p>
+        <hr style="border:none;border-top:1px solid #EDECF3;margin:24px 0 12px;" />
+        <p style="color:#9a94ac;font-size:12px;margin:0;">Pick the Place · <span style="color:#620DFF;font-weight:bold;">revenexx</span></p>
       </div>
     `,
   });
@@ -129,15 +133,17 @@ export async function sendResultsNotification(
     subject: `🏆 Ergebnis: Unser nächstes Jahrestreffen findet statt in...`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-        <h1 style="color: #4f46e5;">Hallo ${name}!</h1>
+        <h1 style="color: #620DFF;">Hallo ${name}!</h1>
         <p>Die Wahl ist entschieden! 🎉</p>
         <p style="font-size: 24px; font-weight: bold; text-align: center; margin: 24px 0; color: #059669;">
           ${winnerName}
         </p>
         <p>Das nächstes Jahrestreffen findet in <strong>${winnerName}</strong> statt.</p>
-        <a href="${APP_URL}/results?token=${token}" style="display: inline-block; background: #4f46e5; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 16px 0;">
+        <a href="${APP_URL}/results?token=${token}" style="display: inline-block; background: #620DFF; color: white; padding: 12px 24px; border-radius: 9999px; text-decoration: none; margin: 16px 0;">
           Details ansehen
         </a>
+        <hr style="border:none;border-top:1px solid #EDECF3;margin:24px 0 12px;" />
+        <p style="color:#9a94ac;font-size:12px;margin:0;">Pick the Place · <span style="color:#620DFF;font-weight:bold;">revenexx</span></p>
       </div>
     `,
   });

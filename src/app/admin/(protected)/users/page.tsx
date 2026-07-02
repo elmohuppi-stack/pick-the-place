@@ -258,7 +258,7 @@ export default function AdminUsersPage() {
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
               required
             />
           </div>
@@ -270,7 +270,7 @@ export default function AdminUsersPage() {
               type="password"
               value={ownNewPassword}
               onChange={(e) => setOwnNewPassword(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
               required
               minLength={8}
             />
@@ -278,7 +278,7 @@ export default function AdminUsersPage() {
           <div className="flex gap-2">
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 transition-all"
+              className="px-4 py-2 text-sm btn btn-primary"
             >
               Speichern
             </button>
@@ -311,7 +311,7 @@ export default function AdminUsersPage() {
                 type="text"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
                 required
               />
             </div>
@@ -323,7 +323,7 @@ export default function AdminUsersPage() {
                 type="email"
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
                 required
               />
             </div>
@@ -335,7 +335,7 @@ export default function AdminUsersPage() {
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
                 required
                 minLength={8}
               />
@@ -344,7 +344,7 @@ export default function AdminUsersPage() {
           <div className="flex gap-2">
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 transition-all"
+              className="px-4 py-2 text-sm btn btn-primary"
             >
               Anlegen
             </button>
@@ -372,7 +372,7 @@ export default function AdminUsersPage() {
           </h2>
           <button
             onClick={() => setShowAddForm(true)}
-            className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 transition-all"
+            className="px-3 py-1.5 text-xs btn btn-primary"
           >
             + Hinzufügen
           </button>
@@ -392,14 +392,14 @@ export default function AdminUsersPage() {
                 className="px-6 py-4 flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-revenexx-400 to-revenexx-500 flex items-center justify-center text-white text-xs font-bold">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-900 dark:text-white">
                       {user.name}
                       {user.id === sessionId && (
-                        <span className="ml-2 text-xs text-indigo-500 font-normal">
+                        <span className="ml-2 text-xs text-revenexx-500 font-normal">
                           (Du)
                         </span>
                       )}
@@ -413,7 +413,7 @@ export default function AdminUsersPage() {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => generateResetLink(user.id)}
-                    className="px-2.5 py-1 text-xs rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
+                    className="px-2.5 py-1 text-xs rounded-lg text-slate-500 hover:text-revenexx-600 hover:bg-revenexx-50 dark:hover:bg-revenexx-900/30 transition-colors"
                     title="Reset-Link kopieren"
                   >
                     Reset-Link
@@ -425,7 +425,7 @@ export default function AdminUsersPage() {
                         type="password"
                         value={changePasswordValue}
                         onChange={(e) => setChangePasswordValue(e.target.value)}
-                        className="w-28 px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none"
+                        className="w-28 px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
                         placeholder="Neues PW"
                         minLength={8}
                         autoFocus
@@ -449,7 +449,7 @@ export default function AdminUsersPage() {
                   ) : (
                     <button
                       onClick={() => setChangePasswordId(user.id)}
-                      className="px-2.5 py-1 text-xs rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
+                      className="px-2.5 py-1 text-xs rounded-lg text-slate-500 hover:text-revenexx-600 hover:bg-revenexx-50 dark:hover:bg-revenexx-900/30 transition-colors"
                       title="Passwort ändern"
                     >
                       PW ändern

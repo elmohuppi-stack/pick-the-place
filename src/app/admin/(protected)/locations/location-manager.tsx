@@ -75,7 +75,7 @@ export function LocationManager({ event }: { event: EventSummary }) {
                   onClick={() => toggleActive(loc.id, loc.isActive)}
                   className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
                     loc.isActive
-                      ? "bg-indigo-500 border-indigo-500 text-white"
+                      ? "bg-revenexx-500 border-revenexx-500 text-white"
                       : "border-slate-300 dark:border-slate-600"
                   }`}
                 >

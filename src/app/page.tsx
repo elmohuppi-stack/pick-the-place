@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { PoweredByRevenexx } from "@/components/ui/Brand";
 
 export default async function HomePage() {
   const event = await prisma.event.findFirst({
@@ -27,7 +28,7 @@ export default async function HomePage() {
     proposal: "bg-amber-400",
     voting: "bg-green-400",
     results: "bg-blue-400",
-    closed: "bg-purple-400",
+    closed: "bg-revenexx-400",
   };
 
   const status = event?.status || "setup";
@@ -36,7 +37,7 @@ export default async function HomePage() {
     <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
       <div className="max-w-md w-full text-center space-y-8">
         {/* Logo */}
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/25">
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-revenexx-500 to-revenexx-600 shadow-lg shadow-revenexx-500/25">
           <svg
             className="w-10 h-10 text-white"
             fill="none"
@@ -81,7 +82,7 @@ export default async function HomePage() {
 
         <Link
           href="/admin/login"
-          className="inline-flex items-center gap-2 text-sm text-theme-muted hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-theme-muted hover:text-revenexx-600 dark:hover:text-revenexx-400 transition-colors"
         >
           <svg
             className="w-4 h-4"
@@ -98,6 +99,10 @@ export default async function HomePage() {
           </svg>
           Admin-Bereich
         </Link>
+
+        <div className="flex justify-center pt-4">
+          <PoweredByRevenexx />
+        </div>
       </div>
     </div>
   );
