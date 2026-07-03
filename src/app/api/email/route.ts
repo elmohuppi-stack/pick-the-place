@@ -35,12 +35,12 @@ export async function POST(request: NextRequest) {
   }
 
   const participants = await prisma.participant.findMany({
-    where: { eventId },
+    where: { eventId, isActive: true },
   });
 
   if (participants.length === 0) {
     return NextResponse.json(
-      { error: "Keine Teilnehmer gefunden" },
+      { error: "Keine aktiven Teilnehmer gefunden" },
       { status: 400 },
     );
   }

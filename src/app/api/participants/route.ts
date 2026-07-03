@@ -63,6 +63,35 @@ export async function POST(request: NextRequest) {
   return NextResponse.json(participant, { status: 201 });
 }
 
+export async function PATCH(request: NextRequest) {
+  const session = await getAdminSession();
+  if (!session)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "id erforderlich" }, { status: 400 });
+  }
+
+  const { isActive } = await request.json();
+
+  if (typeof isActive !== "boolean") {
+    return NextResponse.json(
+      { error: "isActive (boolean) erforderlich" },
+      { status: 400 },
+    );
+  }
+
+  const participant = await prisma.participant.update({
+    where: { id },
+    data: { isActive },
+  });
+
+  return NextResponse.json(participant);
+}
+
 export async function DELETE(request: NextRequest) {
   const session = await getAdminSession();
   if (!session)

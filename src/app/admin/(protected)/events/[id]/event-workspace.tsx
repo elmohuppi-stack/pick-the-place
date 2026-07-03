@@ -151,7 +151,7 @@ export function EventWorkspace({ event }: { event: WorkspaceEvent }) {
           />
         )}
         {activeTab === "participants" && (
-          <ParticipantManager eventId={event.id} />
+          <ParticipantManager eventId={event.id} status={event.status} />
         )}
         {activeTab === "locations" && <LocationManager eventId={event.id} />}
         {activeTab === "rounds" && (

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
+import { COLLEAGUES } from "@/lib/colleagues";
+import { generateAuthToken } from "@/lib/utils";
 
 export async function GET() {
   const session = await getAdminSession();
@@ -44,6 +46,15 @@ export async function POST(request: NextRequest) {
       description,
       eventDate:
         parsedDate && !isNaN(parsedDate.getTime()) ? parsedDate : null,
+      // revenexx-Kollegen als aktive Default-Teilnehmer vorbefüllen; pro Event
+      // deaktivier- oder erweiterbar.
+      participants: {
+        create: COLLEAGUES.map((c) => ({
+          name: c.name,
+          email: c.email,
+          authToken: generateAuthToken(),
+        })),
+      },
     },
   });
 

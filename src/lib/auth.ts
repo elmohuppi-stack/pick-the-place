@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { prisma } from "./prisma";
+import { COLLEAGUES, colleagueNameFromEmail } from "./colleagues";
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -21,31 +22,45 @@ export interface AdminSession {
   name: string;
 }
 
-/** Ensure env-var admin exists; updates password if already present */
+/**
+ * Legt fehlende Admin-Zugänge an: alle revenexx-Kollegen plus optional den
+ * Env-Admin (ADMIN_EMAIL). Alle erhalten das gemeinsame Initial-Passwort aus
+ * ADMIN_PASSWORD. Bewusst **create-if-missing**: bereits vorhandene Accounts
+ * (inkl. individuell geänderter Passwörter) werden NICHT überschrieben.
+ */
 async function ensureAdminSeeded(): Promise<void> {
-  const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) return;
+
+  const adminEmail = process.env.ADMIN_EMAIL;
   const adminName = process.env.ADMIN_NAME || "Admin";
 
-  if (!adminEmail || !adminPassword) return;
+  // Gewünschte Zugänge zusammenstellen (Kollegen + optional Env-Admin), Duplikate
+  // per E-Mail entfernen.
+  const desired = new Map<string, string>(); // email -> name
+  for (const c of COLLEAGUES) desired.set(c.email, c.name);
+  if (adminEmail && !desired.has(adminEmail)) {
+    desired.set(adminEmail, adminName);
+  }
 
-  const existing = await prisma.adminUser.findUnique({
-    where: { email: adminEmail },
+  const emails = [...desired.keys()];
+  const existing = await prisma.adminUser.findMany({
+    where: { email: { in: emails } },
+    select: { email: true },
   });
+  const existingEmails = new Set(existing.map((u) => u.email));
+
+  const missing = emails.filter((email) => !existingEmails.has(email));
+  if (missing.length === 0) return;
 
   const passwordHash = await bcrypt.hash(adminPassword, 12);
-
-  if (existing) {
-    // Update password hash in case env changed
-    await prisma.adminUser.update({
-      where: { email: adminEmail },
-      data: { passwordHash, name: adminName },
-    });
-  } else {
-    await prisma.adminUser.create({
-      data: { email: adminEmail, name: adminName, passwordHash },
-    });
-  }
+  await prisma.adminUser.createMany({
+    data: missing.map((email) => ({
+      email,
+      name: desired.get(email) || colleagueNameFromEmail(email),
+      passwordHash,
+    })),
+  });
 }
 
 export async function verifyAdminCredentials(

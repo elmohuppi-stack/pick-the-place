@@ -71,9 +71,9 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Check if all participants voted → auto-close round
+    // Check if all active participants voted → auto-close round
     const totalParticipants = await prisma.participant.count({
-      where: { eventId: participant.eventId },
+      where: { eventId: participant.eventId, isActive: true },
     });
 
     const totalVotes = await prisma.vote.count({

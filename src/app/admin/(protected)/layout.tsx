@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getAdminSession } from "@/lib/auth";
 import { PoweredByRevenexx } from "@/components/ui/Brand";
+import { LogoutButton } from "./logout-button";
 
 export default async function AdminLayout({
   children,
@@ -30,7 +31,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen flex">
       {/* Sidebar - Desktop */}
-      <nav className="hidden md:flex flex-col w-64 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-r border-slate-200 dark:border-slate-700 p-4">
+      <nav className="hidden md:flex flex-col w-64 shrink-0 sticky top-0 h-screen overflow-y-auto bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-r border-slate-200 dark:border-slate-700 p-4">
         <div className="flex items-center gap-3 px-3 py-4 mb-6">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-revenexx-500 to-revenexx-600 flex items-center justify-center">
             <svg
@@ -52,11 +53,11 @@ export default async function AdminLayout({
               />
             </svg>
           </div>
-          <div>
-            <p className="font-semibold text-slate-900 dark:text-white text-sm">
-              Admin
+          <div className="min-w-0">
+            <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">
+              {session.name || "Admin"}
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
               {session.email}
             </p>
           </div>
@@ -106,6 +107,8 @@ export default async function AdminLayout({
           </svg>
           Zurück zur App
         </Link>
+
+        <LogoutButton />
 
         <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700 px-3">
           <PoweredByRevenexx />
@@ -165,6 +168,7 @@ export default async function AdminLayout({
                 </svg>
               </Link>
             ))}
+            <LogoutButton variant="icon" />
           </div>
         </header>
 

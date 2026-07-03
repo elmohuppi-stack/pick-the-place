@@ -30,6 +30,7 @@ model Participant {
   name      String
   email     String
   authToken String   @unique
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
   event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
