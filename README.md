@@ -11,6 +11,7 @@ Das Tool begleitet eine Gruppe von der **Vorschlagsphase** („Wo sollen wir uns
 - **Phasen-gesteuerter Ablauf** – Vorbereitung → Vorschläge → Abstimmung → Ergebnis, gesteuert über einen Phasen-Stepper im event-zentrierten Workspace
 - **Vorschlagsphase** – Jeder Teilnehmer kann Orte vorschlagen
 - **Abstimmungsrunden** – Mehrere Durchgänge möglich; Runden enden automatisch, wenn alle aktiven Teilnehmer abgestimmt haben
+- **Live-Verfolgung der laufenden Runde** – Der Admin sieht im Runden-Tab in Echtzeit den Teilnahme-Fortschritt („X von Y haben abgestimmt", inkl. Enthaltungen und noch offener Teilnehmer) sowie den Zwischenstand pro Ort mit hervorgehobener Führung; aktualisiert sich automatisch
 - **Stichwahl bei Bedarf** – Gibt es keine absolute Mehrheit (>50 %), lässt sich eine Stichwahl zwischen den stärksten Orten starten
 - **Ergebnisse & Sieger-Banner** – Prozentuale Auswertung; Sieger bzw. Favorit werden prominent dargestellt (auch im Dashboard)
 - **Aktivitäts-Protokoll** – Timeline pro Event: wer wurde wann eingeladen (inkl. fehlgeschlagener E-Mails) und wer hat wann abgestimmt
@@ -53,7 +54,7 @@ Das Tool ist primär ein internes revenexx-Werkzeug:
 1. **Event erstellen** – Admin legt ein Event an (z. B. „Jahrestreffen 2026")
 2. **Teilnehmer prüfen** – Kollegen sind automatisch als Teilnehmer vorbefüllt; nicht relevante deaktivieren oder weitere hinzufügen
 3. **Vorschlagsphase aktivieren** – Teilnehmer erhalten einen Magic Link und schlagen Orte vor
-4. **Abstimmungsrunde starten** – Admin startet eine Runde, Teilnehmer stimmen ab (endet automatisch, wenn alle aktiven Teilnehmer abgestimmt haben)
+4. **Abstimmungsrunde starten** – Admin startet eine Runde, Teilnehmer stimmen ab (endet automatisch, wenn alle aktiven Teilnehmer abgestimmt haben); der Admin verfolgt Fortschritt und Zwischenstand live im Runden-Tab
 5. **Ergebnisse ansehen** – Sieger (>50 %) bzw. Favorit werden prominent angezeigt
 6. **Stichwahl (optional)** – Ohne absolute Mehrheit kann eine Stichwahl zwischen den stärksten Orten gestartet werden
 7. **Event abschließen** – Endzustand; der gesamte Ablauf bleibt im Protokoll nachvollziehbar
