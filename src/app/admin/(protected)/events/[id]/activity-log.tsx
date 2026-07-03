@@ -6,11 +6,12 @@ import { formatDateTime } from "@/lib/format";
 interface ActivityItem {
   id: string;
   at: string;
-  kind: "email_sent" | "email_failed" | "vote";
+  kind: "email_sent" | "email_failed" | "vote" | "location_proposed";
   emailType?: "proposal_invite" | "vote_invite" | "results";
   participant: string;
   roundNumber: number | null;
   error?: string | null;
+  locationName?: string;
 }
 
 export function ActivityLog({ eventId }: { eventId: string }) {
@@ -84,6 +85,18 @@ function LogRow({ item }: { item: ActivityItem }) {
         </span>{" "}
         hat abgestimmt
         {item.roundNumber != null && ` (Runde ${item.roundNumber})`}
+      </>
+    );
+  } else if (item.kind === "location_proposed") {
+    icon = "📍";
+    text = (
+      <>
+        <span className="font-medium text-theme-primary">
+          {item.participant}
+        </span>{" "}
+        hat{" "}
+        <span className="font-medium">{item.locationName}</span>{" "}
+        vorgeschlagen
       </>
     );
   } else if (item.kind === "email_failed") {

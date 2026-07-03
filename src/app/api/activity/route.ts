@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const [emailLogs, votes] = await Promise.all([
+    const [emailLogs, votes, locations] = await Promise.all([
       prisma.emailLog.findMany({
         where: { participant: { eventId } },
         include: {
@@ -35,6 +35,16 @@ export async function GET(request: NextRequest) {
         include: {
           participant: { select: { name: true } },
           votingRound: { select: { roundNumber: true } },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.location.findMany({
+        where: {
+          eventId,
+          name: { not: "__optout__" },
+        },
+        include: {
+          proposedBy: { select: { name: true } },
         },
         orderBy: { createdAt: "desc" },
       }),
@@ -59,6 +69,14 @@ export async function GET(request: NextRequest) {
         kind: "vote" as const,
         participant: v.participant.name,
         roundNumber: v.votingRound.roundNumber,
+      })),
+      ...locations.map((l) => ({
+        id: `location-${l.id}`,
+        at: l.createdAt,
+        kind: "location_proposed" as const,
+        participant: l.proposedBy.name,
+        locationName: l.name,
+        roundNumber: null as number | null,
       })),
     ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
 

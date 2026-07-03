@@ -51,7 +51,7 @@ model Location {
   createdAt     DateTime @default(now())
 
   event      Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  proposedBy Participant @relation(fields: [proposedById], references: [id])
+  proposedBy Participant @relation(fields: [proposedById], references: [id], onDelete: Cascade)
   votes      Vote[]
 }
 
