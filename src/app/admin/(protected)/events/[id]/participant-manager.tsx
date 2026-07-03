@@ -144,17 +144,6 @@ export function ParticipantManager({
     }
   }
 
-  async function removeParticipant(id: string) {
-    if (!confirm("Teilnehmer wirklich entfernen?")) return;
-
-    try {
-      await fetch(`/api/participants?id=${id}`, { method: "DELETE" });
-      fetchParticipants();
-    } catch {
-      setMessage({ type: "error", text: "Fehler beim Entfernen" });
-    }
-  }
-
   const linkInfo = participantLinkInfo(status);
 
   function copyLink(token: string) {
@@ -311,12 +300,6 @@ export function ParticipantManager({
                     className="px-3 py-1.5 text-xs font-medium text-revenexx-600 dark:text-revenexx-400 hover:bg-revenexx-50 dark:hover:bg-revenexx-900/30 rounded-lg transition-colors"
                   >
                     {linkInfo.label} kopieren
-                  </button>
-                  <button
-                    onClick={() => removeParticipant(p.id)}
-                    className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                  >
-                    Entfernen
                   </button>
                 </div>
               </div>

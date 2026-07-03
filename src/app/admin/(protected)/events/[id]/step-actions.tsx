@@ -1,22 +1,24 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter, usePathname } from "next/navigation";
 import {
-  EVENT_PHASES,
   majorityWinner,
   topLocation,
   runoffLocationIds,
   type LocationResult,
 } from "@/lib/event-status";
+import { useInvites } from "./use-invites";
+import { EmailTemplateEditor, ResendWarning } from "./email-manager";
 
-interface StepperProps {
+interface StepActionsProps {
   eventId: string;
   status: string;
   participantCount: number;
   activeLocationCount: number;
   activeRoundId: string | null;
-  roundCount: number;
+  activeRoundNumber: number | null;
+  proposalEmailText: string | null;
+  voteEmailText: string | null;
 }
 
 interface LocationApi {
@@ -32,22 +34,35 @@ interface RoundApi {
   locations: LocationResult[];
 }
 
-export function PhaseStepper({
+const primaryBtn =
+  "px-4 py-2 btn btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed";
+const secondaryBtn =
+  "px-4 py-2 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+const dangerBtn =
+  "px-4 py-2 text-sm font-medium rounded-xl border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+const linkBtn =
+  "text-sm font-medium text-revenexx-600 dark:text-revenexx-400 hover:underline disabled:opacity-50 disabled:cursor-not-allowed";
+
+/**
+ * Aktionsbereich des aktuellen Wizard-Schritts: die phasenabhängige
+ * Weiter-Aktion (Einladen/Starten/Beenden/Abschließen), optionaler
+ * E-Mail-Text-Editor und – im Ergebnis – der Sieger-Banner.
+ */
+export function StepActions({
   eventId,
   status,
   participantCount,
   activeLocationCount,
   activeRoundId,
-  roundCount,
-}: StepperProps) {
-  const router = useRouter();
-  const pathname = usePathname();
+  activeRoundNumber,
+  proposalEmailText,
+  voteEmailText,
+}: StepActionsProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRound, setLastRound] = useState<RoundApi | null>(null);
-
-  const currentIndex = EVENT_PHASES.findIndex((p) => p.status === status);
-  const isClosed = status === "closed";
+  const [showEditor, setShowEditor] = useState(false);
+  const invites = useInvites(eventId, activeRoundNumber);
 
   const loadResults = useCallback(async () => {
     try {
@@ -64,10 +79,6 @@ export function PhaseStepper({
   useEffect(() => {
     if (status === "results" || status === "closed") loadResults();
   }, [status, loadResults]);
-
-  function goTab(tab: string) {
-    router.push(`${pathname}?tab=${tab}`);
-  }
 
   async function run(fn: () => Promise<Response>) {
     setBusy(true);
@@ -96,15 +107,6 @@ export function PhaseStepper({
       }),
     );
 
-  const startRound = () =>
-    run(() =>
-      fetch("/api/rounds", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId }),
-      }),
-    );
-
   const endRound = () => {
     if (!activeRoundId) return;
     run(() =>
@@ -115,6 +117,55 @@ export function PhaseStepper({
       }),
     );
   };
+
+  // Vorschlagsphase starten UND Vorschlags-Einladungen versenden – ein Schritt.
+  async function startProposalAndInvite() {
+    setBusy(true);
+    setError(null);
+    try {
+      const statusRes = await fetch("/api/events/status", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId, status: "proposal" }),
+      });
+      if (!statusRes.ok) {
+        const data = await statusRes.json().catch(() => ({}));
+        setError(data.error || "Vorschlagsphase konnte nicht gestartet werden.");
+        setBusy(false);
+        return;
+      }
+      await invites.send("proposal");
+      window.location.reload();
+    } catch {
+      setError("Ein Fehler ist aufgetreten");
+      setBusy(false);
+    }
+  }
+
+  // Abstimmung starten (Runde anlegen → Status voting) UND einladen.
+  async function startVotingAndInvite() {
+    setBusy(true);
+    setError(null);
+    try {
+      const roundRes = await fetch("/api/rounds", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId }),
+      });
+      if (!roundRes.ok) {
+        const data = await roundRes.json().catch(() => ({}));
+        setError(data.error || "Abstimmung konnte nicht gestartet werden.");
+        setBusy(false);
+        return;
+      }
+      // Runde ist jetzt aktiv – Vote-Einladung kann versendet werden.
+      await invites.send("vote");
+      window.location.reload();
+    } catch {
+      setError("Ein Fehler ist aufgetreten");
+      setBusy(false);
+    }
+  }
 
   async function startRunoff() {
     setBusy(true);
@@ -136,7 +187,6 @@ export function PhaseStepper({
 
       const keepIds = runoffLocationIds(last.locations, 2);
 
-      // Nur die Stichwahl-Orte aktiv lassen (Sentinel __optout__ unangetastet)
       await Promise.all(
         allLocs
           .filter((l) => l.name !== "__optout__")
@@ -156,6 +206,7 @@ export function PhaseStepper({
         body: JSON.stringify({ eventId }),
       });
       if (roundRes.ok) {
+        await invites.send("vote");
         window.location.reload();
       } else {
         const data = await roundRes.json().catch(() => ({}));
@@ -174,77 +225,25 @@ export function PhaseStepper({
   const showBanner =
     (status === "results" || status === "closed") && results.length > 0;
 
+  // E-Mail-Text-Editor: passend zur in dieser Phase relevanten Einladung.
+  const editorKind: "proposal" | "vote" =
+    status === "voting" ? "vote" : "proposal";
+  const editorAvailable =
+    status === "setup" || status === "proposal" || status === "voting";
+
   return (
     <div className="space-y-4">
-      {/* Stepper */}
-      <div className="flex items-center">
-        {EVENT_PHASES.map((phase, i) => {
-          const done = !isClosed && i < currentIndex;
-          const active = !isClosed && i === currentIndex;
-          const reached = isClosed || i <= currentIndex;
-          return (
-            <div key={phase.status} className="flex items-center flex-1 last:flex-none">
-              <div className="flex flex-col items-center">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
-                    active
-                      ? "bg-revenexx-500 text-white ring-4 ring-revenexx-500/20"
-                      : reached
-                        ? "bg-revenexx-500 text-white"
-                        : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                  }`}
-                >
-                  {done || isClosed ? (
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={3}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m4.5 12.75 6 6 9-13.5"
-                      />
-                    </svg>
-                  ) : (
-                    i + 1
-                  )}
-                </div>
-                <span
-                  className={`mt-1.5 text-xs whitespace-nowrap ${
-                    active
-                      ? "font-semibold text-revenexx-600 dark:text-revenexx-400"
-                      : "text-slate-500 dark:text-slate-400"
-                  }`}
-                >
-                  {phase.label}
-                </span>
-              </div>
-              {i < EVENT_PHASES.length - 1 && (
-                <div
-                  className={`h-0.5 flex-1 mx-2 mb-5 ${
-                    reached && i < currentIndex
-                      ? "bg-revenexx-500"
-                      : "bg-slate-200 dark:bg-slate-700"
-                  }`}
-                />
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Prominenter Ergebnis-Banner */}
       {showBanner && (
         <ResultBanner winner={winner} favorite={favorite} results={results} />
       )}
 
-      {/* Nächster Schritt */}
       <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-theme-card">
-        <p className="text-xs font-semibold uppercase tracking-wider text-revenexx-600 dark:text-revenexx-400 mb-2">
-          Nächster Schritt
+        <p className="text-xs font-semibold uppercase tracking-wider text-revenexx-600 dark:text-revenexx-400 mb-3">
+          {status === "voting"
+            ? "Laufende Abstimmung"
+            : status === "results" || status === "closed"
+              ? "Abschluss"
+              : "Nächster Schritt"}
         </p>
 
         {error && (
@@ -252,156 +251,169 @@ export function PhaseStepper({
             {error}
           </div>
         )}
+        {invites.result && (
+          <div
+            className={`mb-3 p-2.5 rounded-lg text-sm ${
+              invites.result.type === "success"
+                ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                : "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+            }`}
+          >
+            {invites.result.text}
+          </div>
+        )}
 
-        <NextStep
+        <Actions
           status={status}
           participantCount={participantCount}
           activeLocationCount={activeLocationCount}
-          roundCount={roundCount}
+          proposalSent={invites.proposalSent}
+          voteSent={invites.voteSent}
           winnerName={winner?.name ?? null}
           busy={busy}
-          goTab={goTab}
+          sending={invites.sending}
+          editorAvailable={editorAvailable}
+          showEditor={showEditor}
+          toggleEditor={() => setShowEditor((v) => !v)}
           setStatus={setStatus}
-          startRound={startRound}
           endRound={endRound}
           startRunoff={startRunoff}
+          startProposalAndInvite={startProposalAndInvite}
+          startVotingAndInvite={startVotingAndInvite}
+          resendProposal={() => invites.send("proposal")}
+          resendVote={() => invites.send("vote")}
         />
+
+        {editorAvailable && showEditor && (
+          <EmailTemplateEditor
+            eventId={eventId}
+            kind={editorKind}
+            proposalEmailText={proposalEmailText}
+            voteEmailText={voteEmailText}
+          />
+        )}
+
+        {editorAvailable && <ResendWarning />}
       </div>
     </div>
   );
 }
 
-interface NextStepProps {
+interface ActionsProps {
   status: string;
   participantCount: number;
   activeLocationCount: number;
-  roundCount: number;
+  proposalSent: number | null;
+  voteSent: number | null;
   winnerName: string | null;
   busy: boolean;
-  goTab: (tab: string) => void;
+  sending: boolean;
+  editorAvailable: boolean;
+  showEditor: boolean;
+  toggleEditor: () => void;
   setStatus: (s: string) => void;
-  startRound: () => void;
   endRound: () => void;
   startRunoff: () => void;
+  startProposalAndInvite: () => void;
+  startVotingAndInvite: () => void;
+  resendProposal: () => void;
+  resendVote: () => void;
 }
 
-function NextStep(props: NextStepProps) {
-  const {
-    status,
-    participantCount,
-    activeLocationCount,
-    winnerName,
-    busy,
-    goTab,
-    setStatus,
-    startRound,
-    endRound,
-    startRunoff,
-  } = props;
+function Actions(p: ActionsProps) {
+  const editorLink = p.editorAvailable && (
+    <button onClick={p.toggleEditor} className={linkBtn}>
+      {p.showEditor ? "E-Mail-Text ausblenden" : "E-Mail-Text anpassen"}
+    </button>
+  );
 
-  const primary =
-    "px-4 py-2 btn btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed";
-  const secondary =
-    "px-4 py-2 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors";
-  const danger =
-    "px-4 py-2 text-sm font-medium rounded-xl border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors";
-
-  if (status === "setup") {
-    if (participantCount === 0) {
-      return (
-        <Block text="Füge zuerst Teilnehmer hinzu, um das Event zu starten.">
-          <button className={primary} onClick={() => goTab("participants")}>
-            Teilnehmer hinzufügen
-          </button>
-        </Block>
-      );
-    }
+  if (p.status === "setup") {
     return (
-      <Block text="Alles bereit. Öffne die Vorschlagsphase, damit Teilnehmer Orte einreichen können.">
+      <Block text="Prüfe die Teilnehmer. Wenn alle passen, lade sie ein – damit startet die Vorschlagsphase.">
         <button
-          className={primary}
-          disabled={busy}
-          onClick={() => setStatus("proposal")}
+          className={primaryBtn}
+          disabled={p.busy || p.sending || p.participantCount === 0}
+          onClick={p.startProposalAndInvite}
         >
-          Vorschlagsphase starten
+          Einladungen versenden &amp; Vorschlagsphase starten
         </button>
-        <button className={secondary} onClick={() => goTab("email")}>
-          Einladungen senden
-        </button>
+        {editorLink}
+        {p.participantCount === 0 && (
+          <span className="text-xs text-theme-muted w-full">
+            Füge zuerst unten Teilnehmer hinzu.
+          </span>
+        )}
       </Block>
     );
   }
 
-  if (status === "proposal") {
+  if (p.status === "proposal") {
     return (
       <Block
         text={
-          activeLocationCount === 0
-            ? "Teilnehmer schlagen Orte vor. Aktiviere Orte für die Abstimmung, sobald genug Vorschläge da sind."
-            : `Teilnehmer schlagen Orte vor. ${activeLocationCount} Orte sind für die Abstimmung aktiv. Starte die Abstimmung, wenn du bereit bist.`
+          p.activeLocationCount === 0
+            ? "Teilnehmer schlagen Orte vor. Aktiviere unten die Orte für die Abstimmung."
+            : `${p.activeLocationCount} Orte sind aktiv. Starte die Abstimmung, wenn du bereit bist.`
         }
       >
         <button
-          className={primary}
-          disabled={busy || activeLocationCount === 0}
-          onClick={startRound}
+          className={primaryBtn}
+          disabled={p.busy || p.sending || p.activeLocationCount === 0}
+          onClick={p.startVotingAndInvite}
         >
-          Abstimmung starten
+          Abstimmung starten &amp; einladen
         </button>
-        <button className={secondary} onClick={() => goTab("locations")}>
-          Orte prüfen
+        <button className={linkBtn} disabled={p.sending} onClick={p.resendProposal}>
+          {(p.proposalSent ?? 0) > 0
+            ? "Vorschlags-Einladung erneut senden"
+            : "Vorschlags-Einladung senden"}
         </button>
-        <button className={secondary} onClick={() => goTab("email")}>
-          Einladungen senden
-        </button>
+        {editorLink}
       </Block>
     );
   }
 
-  if (status === "voting") {
+  if (p.status === "voting") {
     return (
-      <Block text="Die Abstimmung läuft. Sie endet automatisch, wenn alle abgestimmt haben — oder beende sie manuell.">
-        <button className={danger} disabled={busy} onClick={endRound}>
+      <Block text="Die Abstimmung läuft. Sie endet automatisch, sobald alle abgestimmt haben – oder beende sie manuell.">
+        <button className={dangerBtn} disabled={p.busy} onClick={p.endRound}>
           Abstimmung beenden
         </button>
-        <button className={secondary} onClick={() => goTab("email")}>
-          Zur Abstimmung einladen
+        <button className={linkBtn} disabled={p.sending} onClick={p.resendVote}>
+          {(p.voteSent ?? 0) > 0
+            ? "Zur Abstimmung erneut einladen"
+            : "Zur Abstimmung einladen"}
         </button>
+        {editorLink}
       </Block>
     );
   }
 
-  if (status === "results") {
-    if (winnerName) {
+  if (p.status === "results") {
+    if (p.winnerName) {
       return (
-        <Block text="Das Ergebnis steht fest. Schließe das Event ab oder sieh dir die Details an.">
+        <Block text="Das Ergebnis steht fest. Schließe das Event ab.">
           <button
-            className={primary}
-            disabled={busy}
-            onClick={() => setStatus("closed")}
+            className={primaryBtn}
+            disabled={p.busy}
+            onClick={() => p.setStatus("closed")}
           >
             Event abschließen
-          </button>
-          <button className={secondary} onClick={() => goTab("rounds")}>
-            Ergebnis ansehen
           </button>
         </Block>
       );
     }
     return (
-      <Block text="Kein Ort hat über 50 % erreicht. Starte eine Stichwahl zwischen den stärksten Orten oder schließe das Event ab.">
-        <button className={primary} disabled={busy} onClick={startRunoff}>
+      <Block text="Kein Ort hat über 50 % erreicht. Starte eine Stichwahl zwischen den stärksten Orten – oder schließe das Event ab.">
+        <button className={primaryBtn} disabled={p.busy} onClick={p.startRunoff}>
           Stichwahl starten
         </button>
         <button
-          className={secondary}
-          disabled={busy}
-          onClick={() => setStatus("closed")}
+          className={secondaryBtn}
+          disabled={p.busy}
+          onClick={() => p.setStatus("closed")}
         >
           Event abschließen
-        </button>
-        <button className={secondary} onClick={() => goTab("rounds")}>
-          Ergebnis ansehen
         </button>
       </Block>
     );
@@ -410,13 +422,10 @@ function NextStep(props: NextStepProps) {
   // closed
   return (
     <Block text="Das Event ist abgeschlossen.">
-      <button className={secondary} onClick={() => goTab("rounds")}>
-        Ergebnis ansehen
-      </button>
       <button
-        className={secondary}
-        disabled={busy}
-        onClick={() => setStatus("results")}
+        className={secondaryBtn}
+        disabled={p.busy}
+        onClick={() => p.setStatus("results")}
       >
         Wieder öffnen
       </button>
@@ -434,7 +443,9 @@ function Block({
   return (
     <div>
       <p className="text-sm text-theme-secondary mb-3">{text}</p>
-      <div className="flex flex-wrap gap-2">{children}</div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        {children}
+      </div>
     </div>
   );
 }

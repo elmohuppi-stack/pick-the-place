@@ -8,17 +8,17 @@ Das Tool begleitet eine Gruppe von der **Vorschlagsphase** („Wo sollen wir uns
 
 ## Features
 
-- **Phasen-gesteuerter Ablauf** – Vorbereitung → Vorschläge → Abstimmung → Ergebnis, gesteuert über einen Phasen-Stepper im event-zentrierten Workspace
+- **Geführter Schritt-Assistent** – Vorbereitung → Vorschläge → Abstimmung → Ergebnis: eine klickbare Step-Leiste führt durch den Ablauf, darunter erscheint nur der zum aktuellen Schritt passende Inhalt. Abgeschlossene Schritte lassen sich jederzeit wieder ansehen
+- **Zusammengelegte Aktionen** – Das Starten einer Phase und das Versenden ihrer Einladungen ist ein Schritt: „Einladungen versenden & Vorschlagsphase starten" bzw. „Abstimmung starten & einladen"
 - **Vorschlagsphase** – Jeder Teilnehmer kann Orte vorschlagen
 - **Abstimmungsrunden** – Mehrere Durchgänge möglich; Runden enden automatisch, wenn alle aktiven Teilnehmer abgestimmt haben
-- **Live-Verfolgung der laufenden Runde** – Der Admin sieht im Runden-Tab in Echtzeit den Teilnahme-Fortschritt („X von Y haben abgestimmt", inkl. Enthaltungen und noch offener Teilnehmer) sowie den Zwischenstand pro Ort mit hervorgehobener Führung; aktualisiert sich automatisch
+- **Live-Verfolgung der laufenden Runde** – Im Abstimmungs-Schritt sieht der Admin in Echtzeit den Teilnahme-Fortschritt („X von Y haben abgestimmt", inkl. Enthaltungen und noch offener Teilnehmer) sowie den Zwischenstand pro Ort mit hervorgehobener Führung; aktualisiert sich automatisch
 - **Stichwahl bei Bedarf** – Gibt es keine absolute Mehrheit (>50 %), lässt sich eine Stichwahl zwischen den stärksten Orten starten
 - **Ergebnisse & Sieger-Banner** – Prozentuale Auswertung; Sieger bzw. Favorit werden prominent dargestellt (auch im Dashboard)
-- **Aktivitäts-Protokoll** – Timeline pro Event: wer wurde wann eingeladen (inkl. fehlgeschlagener E-Mails) und wer hat wann abgestimmt
-- **Admin-Bereich** – Event-Verwaltung mit Tabs für Teilnehmer, Orte, Runden, E-Mail-Versand und Protokoll
+- **Aktivitäts-Protokoll** – Ausklappbare Timeline pro Event: wer wurde wann eingeladen (inkl. fehlgeschlagener E-Mails) und wer hat wann abgestimmt
 - **Teilnehmer aktivieren/deaktivieren** – Deaktivierte Teilnehmer bleiben erhalten, werden aber nicht eingeladen und zählen nicht zur Abstimmung
 - **Magic Links** – Teilnehmer loggen sich ohne Passwort über einen persönlichen, phasenabhängigen Link ein (Vorschlag / Abstimmung / Ergebnis)
-- **E-Mail-Benachrichtigungen** – Einladungen zur Vorschlags- und Abstimmungsphase (via Resend)
+- **E-Mail-Benachrichtigungen** – Einladungen werden beim Start der jeweiligen Phase versendet (Vorschlag bzw. Abstimmung, via Resend); die Texte sind pro Event anpassbar
 - **Opt-Out** – Teilnehmer können in der Vorschlagsphase auf einen Vorschlag verzichten
 - **Echtes Login/Logout** – Admin-Login mit Session-Cookie und Abmelden
 - **Event-Datum** – Optionaler Termin pro Event
@@ -51,10 +51,12 @@ Das Tool ist primär ein internes revenexx-Werkzeug:
 
 ## Ablauf
 
+Der Admin wird im Event von einem Schritt-Assistenten durch die vier Phasen geführt.
+
 1. **Event erstellen** – Admin legt ein Event an (z. B. „Jahrestreffen 2026")
 2. **Teilnehmer prüfen** – Kollegen sind automatisch als Teilnehmer vorbefüllt; nicht relevante deaktivieren oder weitere hinzufügen
-3. **Vorschlagsphase aktivieren** – Teilnehmer erhalten einen Magic Link und schlagen Orte vor
-4. **Abstimmungsrunde starten** – Admin startet eine Runde, Teilnehmer stimmen ab (endet automatisch, wenn alle aktiven Teilnehmer abgestimmt haben); der Admin verfolgt Fortschritt und Zwischenstand live im Runden-Tab
+3. **Einladen & Vorschläge starten** – „Einladungen versenden & Vorschlagsphase starten" verschickt die Magic Links und öffnet die Vorschlagsphase; Teilnehmer schlagen Orte vor, der Admin aktiviert die zur Abstimmung stehenden Orte
+4. **Abstimmung starten** – „Abstimmung starten & einladen" öffnet die Runde und lädt zur Abstimmung ein; Teilnehmer stimmen ab (endet automatisch, wenn alle aktiven Teilnehmer abgestimmt haben); Fortschritt und Zwischenstand sind live sichtbar
 5. **Ergebnisse ansehen** – Sieger (>50 %) bzw. Favorit werden prominent angezeigt
 6. **Stichwahl (optional)** – Ohne absolute Mehrheit kann eine Stichwahl zwischen den stärksten Orten gestartet werden
 7. **Event abschließen** – Endzustand; der gesamte Ablauf bleibt im Protokoll nachvollziehbar
@@ -151,12 +153,14 @@ src/
 │   │       ├── layout.tsx              # Sidebar + Logout
 │   │       ├── page.tsx                # Dashboard (Event-Übersicht)
 │   │       ├── users/                  # Admin-Benutzer verwalten
-│   │       └── events/[id]/            # Event-Workspace mit Tabs:
-│   │           ├── event-workspace.tsx #   Übersicht + Phasen-Stepper
+│   │       └── events/[id]/            # Event-Workspace (Schritt-Assistent):
+│   │           ├── event-workspace.tsx #   Step-Leiste + kontextuelles Panel
+│   │           ├── step-actions.tsx    #   Aktionen der aktuellen Phase + Sieger-Banner
+│   │           ├── use-invites.ts      #   Einladungsversand (gemeinsam genutzt)
 │   │           ├── participant-manager #   Teilnehmer
 │   │           ├── location-manager    #   Orte
-│   │           ├── round-manager       #   Runden
-│   │           ├── email-manager       #   E-Mails
+│   │           ├── round-manager       #   Runden & Live-Auswertung
+│   │           ├── email-manager       #   E-Mail-Textvorlagen
 │   │           └── activity-log        #   Protokoll
 │   └── api/                            # API-Routen (events, participants, votes,
 │                                       #   rounds, results, email, activity, admin …)

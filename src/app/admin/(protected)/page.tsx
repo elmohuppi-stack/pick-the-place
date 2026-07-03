@@ -39,7 +39,10 @@ export default async function AdminDashboardPage() {
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-theme-primary">Dashboard</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-theme-primary">Dashboard</h1>
+            <IntroHint />
+          </div>
           <p className="text-theme-secondary text-sm mt-1">
             Übersicht über alle Events
           </p>
@@ -75,8 +78,6 @@ export default async function AdminDashboardPage() {
 
       {events.length > 0 && (
         <div className="space-y-4">
-          <IntroHint />
-
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-theme-primary">Events</h2>
             <CreateEventForm />
@@ -108,9 +109,11 @@ export default async function AdminDashboardPage() {
                         <h3 className="font-semibold text-theme-primary group-hover:text-revenexx-600 dark:group-hover:text-revenexx-400 transition-colors">
                           {event.title}
                         </h3>
-                        <p className="text-sm text-theme-secondary mt-0.5 truncate">
-                          {event.description || "Keine Beschreibung"}
-                        </p>
+                        {event.description && (
+                          <p className="text-sm text-theme-secondary mt-0.5 truncate">
+                            {event.description}
+                          </p>
+                        )}
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs">
                           {dateLabel && (
                             <span className="text-theme-muted">

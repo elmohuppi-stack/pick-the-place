@@ -338,7 +338,8 @@ export function RoundManager({ event }: { event: EventData }) {
         {/* Voting Rounds */}
         {event.votingRounds.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Noch keine Abstimmungsrunde gestartet. Nutze oben »Nächster Schritt«.
+            Noch keine Abstimmungsrunde gestartet. Starte sie über die Aktion
+            oben.
           </p>
         ) : (
           <div>

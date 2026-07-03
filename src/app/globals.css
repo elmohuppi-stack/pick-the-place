@@ -391,3 +391,15 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   DATUMSFELD
+   Nativen Kalender-Indikator ausblenden – der Picker wird per Klick auf das
+   ganze Feld geöffnet (showPicker), Icon und Löschen sind eigene Elemente.
+   ═══════════════════════════════════════════════════ */
+
+.date-field::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
