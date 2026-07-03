@@ -23,10 +23,10 @@ export interface AdminSession {
 }
 
 /**
- * Legt fehlende Admin-Zugänge an: alle revenexx-Kollegen plus optional den
- * Env-Admin (ADMIN_EMAIL). Alle erhalten das gemeinsame Initial-Passwort aus
- * ADMIN_PASSWORD. Bewusst **create-if-missing**: bereits vorhandene Accounts
- * (inkl. individuell geänderter Passwörter) werden NICHT überschrieben.
+ * Stellt sicher, dass alle gewünschten Admin-Zugänge existieren: alle
+ * revenexx-Kollegen plus optional den Env-Admin (ADMIN_EMAIL). Setzt das
+ * Passwort für ALLE auf den aktuellen Wert von ADMIN_PASSWORD, so dass eine
+ * spätere Änderung der Env-Variable sofort wirkt.
  */
 async function ensureAdminSeeded(): Promise<void> {
   const adminPassword = process.env.ADMIN_PASSWORD;
@@ -46,21 +46,31 @@ async function ensureAdminSeeded(): Promise<void> {
   const emails = [...desired.keys()];
   const existing = await prisma.adminUser.findMany({
     where: { email: { in: emails } },
-    select: { email: true },
+    select: { id: true, email: true },
   });
+
+  const currentHash = await bcrypt.hash(adminPassword, 12);
   const existingEmails = new Set(existing.map((u) => u.email));
 
+  // Fehlende User anlegen
   const missing = emails.filter((email) => !existingEmails.has(email));
-  if (missing.length === 0) return;
+  if (missing.length > 0) {
+    await prisma.adminUser.createMany({
+      data: missing.map((email) => ({
+        email,
+        name: desired.get(email) || colleagueNameFromEmail(email),
+        passwordHash: currentHash,
+      })),
+    });
+  }
 
-  const passwordHash = await bcrypt.hash(adminPassword, 12);
-  await prisma.adminUser.createMany({
-    data: missing.map((email) => ({
-      email,
-      name: desired.get(email) || colleagueNameFromEmail(email),
-      passwordHash,
-    })),
-  });
+  // Existierende User auf aktuelles ADMIN_PASSWORD setzen (damit Env-Änderung wirkt)
+  if (existing.length > 0) {
+    await prisma.adminUser.updateMany({
+      where: { id: { in: existing.map((u) => u.id) } },
+      data: { passwordHash: currentHash },
+    });
+  }
 }
 
 export async function verifyAdminCredentials(
