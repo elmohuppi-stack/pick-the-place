@@ -24,9 +24,11 @@ export interface AdminSession {
 
 /**
  * Stellt sicher, dass alle gewünschten Admin-Zugänge existieren: alle
- * revenexx-Kollegen plus optional den Env-Admin (ADMIN_EMAIL). Setzt das
- * Passwort für ALLE auf den aktuellen Wert von ADMIN_PASSWORD, so dass eine
- * spätere Änderung der Env-Variable sofort wirkt.
+ * revenexx-Kollegen plus optional den Env-Admin (ADMIN_EMAIL). ADMIN_PASSWORD
+ * dient hier ausschließlich zum *Bootstrap* – fehlende Zugänge werden damit
+ * angelegt. Bestehende Zugänge werden NICHT angefasst, damit selbst gesetzte
+ * Passwörter (PW ändern / Reset-Link) erhalten bleiben. Wer sein Passwort
+ * vergisst, erhält von einem anderen Admin einen Reset-Link.
  */
 async function ensureAdminSeeded(): Promise<void> {
   const adminPassword = process.env.ADMIN_PASSWORD;
@@ -46,29 +48,21 @@ async function ensureAdminSeeded(): Promise<void> {
   const emails = [...desired.keys()];
   const existing = await prisma.adminUser.findMany({
     where: { email: { in: emails } },
-    select: { id: true, email: true },
+    select: { email: true },
   });
 
-  const currentHash = await bcrypt.hash(adminPassword, 12);
   const existingEmails = new Set(existing.map((u) => u.email));
 
-  // Fehlende User anlegen
+  // Nur fehlende Zugänge anlegen. Bestehende Passwörter bleiben unangetastet.
   const missing = emails.filter((email) => !existingEmails.has(email));
   if (missing.length > 0) {
+    const currentHash = await bcrypt.hash(adminPassword, 12);
     await prisma.adminUser.createMany({
       data: missing.map((email) => ({
         email,
         name: desired.get(email) || colleagueNameFromEmail(email),
         passwordHash: currentHash,
       })),
-    });
-  }
-
-  // Existierende User auf aktuelles ADMIN_PASSWORD setzen (damit Env-Änderung wirkt)
-  if (existing.length > 0) {
-    await prisma.adminUser.updateMany({
-      where: { id: { in: existing.map((u) => u.id) } },
-      data: { passwordHash: currentHash },
     });
   }
 }

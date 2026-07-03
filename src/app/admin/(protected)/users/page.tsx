@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 interface AdminUser {
   id: string;
@@ -24,14 +25,14 @@ export default function AdminUsersPage() {
   const [newName, setNewName] = useState("");
   const [newPassword, setNewPassword] = useState("");
 
-  // Password change
-  const [changePasswordId, setChangePasswordId] = useState<string | null>(null);
-  const [changePasswordValue, setChangePasswordValue] = useState("");
-
   // Own password change
   const [showOwnPasswordForm, setShowOwnPasswordForm] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [ownNewPassword, setOwnNewPassword] = useState("");
+
+  // Reset link (zuletzt erzeugter Link, damit er auch bei blockiertem
+  // Clipboard-Zugriff manuell kopiert werden kann)
+  const [resetLink, setResetLink] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -108,52 +109,56 @@ export default function AdminUsersPage() {
     }
   }
 
-  async function changePassword(id: string) {
-    if (!changePasswordValue || changePasswordValue.length < 8) {
-      setMessage({
-        type: "error",
-        text: "Passwort muss mindestens 8 Zeichen lang sein",
-      });
-      return;
-    }
-
+  async function copyToClipboard(text: string): Promise<boolean> {
+    // Bevorzugt die Clipboard-API; fällt bei fehlendem Secure Context
+    // (z. B. HTTP-Zugriff über LAN-IP) auf execCommand zurück.
     try {
-      const res = await fetch(`/api/admin/users/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: changePasswordValue }),
-      });
-
-      if (res.ok) {
-        setMessage({ type: "success", text: "Passwort geändert!" });
-        setChangePasswordId(null);
-        setChangePasswordValue("");
-      } else {
-        const data = await res.json();
-        setMessage({ type: "error", text: data.error || "Fehler" });
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
       }
     } catch {
-      setMessage({ type: "error", text: "Ein Fehler ist aufgetreten" });
+      // Fallback unten versuchen
+    }
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
     }
   }
 
   async function generateResetLink(id: string) {
+    setMessage(null);
+    setResetLink(null);
     try {
       const res = await fetch(`/api/admin/users/${id}/reset-link`, {
         method: "POST",
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        await navigator.clipboard.writeText(data.resetLink);
-        setMessage({
-          type: "success",
-          text: "Reset-Link kopiert!",
-        });
-      } else {
+      if (!res.ok) {
         const data = await res.json();
         setMessage({ type: "error", text: data.error || "Fehler" });
+        return;
       }
+
+      const data = await res.json();
+      setResetLink(data.resetLink);
+      const copied = await copyToClipboard(data.resetLink);
+      setMessage({
+        type: "success",
+        text: copied
+          ? "Reset-Link kopiert!"
+          : "Reset-Link erstellt – bitte unten manuell kopieren.",
+      });
     } catch {
       setMessage({ type: "error", text: "Ein Fehler ist aufgetreten" });
     }
@@ -200,27 +205,6 @@ export default function AdminUsersPage() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={async () => {
-              setMessage(null);
-              try {
-                const res = await fetch("/api/admin/seed", { method: "POST" });
-                const data = await res.json();
-                if (res.ok) {
-                  setMessage({ type: "success", text: data.message });
-                  fetchUsers();
-                } else {
-                  setMessage({ type: "error", text: data.error });
-                }
-              } catch {
-                setMessage({ type: "error", text: "Fehler" });
-              }
-            }}
-            className="px-3 py-2 text-sm font-medium rounded-xl border border-amber-200 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-colors text-amber-700 dark:text-amber-400"
-            title="Admin aus .env.production seeden"
-          >
-            Admin seeden
-          </button>
-          <button
             onClick={() => setShowOwnPasswordForm(!showOwnPasswordForm)}
             className="px-4 py-2 text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-700 dark:text-slate-300"
           >
@@ -241,6 +225,37 @@ export default function AdminUsersPage() {
         </div>
       )}
 
+      {/* Zuletzt erzeugter Reset-Link (manuell kopierbar) */}
+      {resetLink && (
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex items-center gap-2">
+          <input
+            readOnly
+            value={resetLink}
+            onFocus={(e) => e.target.select()}
+            className="flex-1 min-w-0 px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 outline-none"
+          />
+          <button
+            onClick={async () => {
+              const ok = await copyToClipboard(resetLink);
+              setMessage({
+                type: ok ? "success" : "error",
+                text: ok ? "Reset-Link kopiert!" : "Kopieren nicht möglich",
+              });
+            }}
+            className="px-2.5 py-1 text-xs rounded-lg btn btn-primary shrink-0"
+          >
+            Kopieren
+          </button>
+          <button
+            onClick={() => setResetLink(null)}
+            className="px-2 py-1 text-xs rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+            title="Ausblenden"
+          >
+            X
+          </button>
+        </div>
+      )}
+
       {/* Own password form */}
       {showOwnPasswordForm && (
         <form
@@ -254,11 +269,10 @@ export default function AdminUsersPage() {
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
               Aktuelles Passwort
             </label>
-            <input
-              type="password"
+            <PasswordInput
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
+              className="w-full px-3 py-2 pr-10 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
               required
             />
           </div>
@@ -266,11 +280,10 @@ export default function AdminUsersPage() {
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
               Neues Passwort
             </label>
-            <input
-              type="password"
+            <PasswordInput
               value={ownNewPassword}
               onChange={(e) => setOwnNewPassword(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
+              className="w-full px-3 py-2 pr-10 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
               required
               minLength={8}
             />
@@ -331,11 +344,10 @@ export default function AdminUsersPage() {
               <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
                 Passwort
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
+                className="w-full px-3 py-2 pr-10 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
                 required
                 minLength={8}
               />
@@ -418,43 +430,6 @@ export default function AdminUsersPage() {
                   >
                     Reset-Link
                   </button>
-
-                  {changePasswordId === user.id ? (
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="password"
-                        value={changePasswordValue}
-                        onChange={(e) => setChangePasswordValue(e.target.value)}
-                        className="w-28 px-2 py-1 text-xs rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none"
-                        placeholder="Neues PW"
-                        minLength={8}
-                        autoFocus
-                      />
-                      <button
-                        onClick={() => changePassword(user.id)}
-                        className="px-2 py-1 text-xs rounded-lg text-green-600 hover:bg-green-50 dark:hover:bg-green-900/30 transition-colors"
-                      >
-                        OK
-                      </button>
-                      <button
-                        onClick={() => {
-                          setChangePasswordId(null);
-                          setChangePasswordValue("");
-                        }}
-                        className="px-2 py-1 text-xs rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      >
-                        X
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setChangePasswordId(user.id)}
-                      className="px-2.5 py-1 text-xs rounded-lg text-slate-500 hover:text-revenexx-600 hover:bg-revenexx-50 dark:hover:bg-revenexx-900/30 transition-colors"
-                      title="Passwort ändern"
-                    >
-                      PW ändern
-                    </button>
-                  )}
 
                   {user.id !== sessionId && (
                     <button
