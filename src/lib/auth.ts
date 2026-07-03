@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { prisma } from "./prisma";
-import { COLLEAGUES, colleagueNameFromEmail } from "./colleagues";
+import { getColleagues, colleagueNameFromEmail } from "./colleagues";
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
@@ -38,7 +38,7 @@ async function ensureAdminSeeded(): Promise<void> {
   // Gewünschte Zugänge zusammenstellen (Kollegen + optional Env-Admin), Duplikate
   // per E-Mail entfernen.
   const desired = new Map<string, string>(); // email -> name
-  for (const c of COLLEAGUES) desired.set(c.email, c.name);
+  for (const c of getColleagues()) desired.set(c.email, c.name);
   if (adminEmail && !desired.has(adminEmail)) {
     desired.set(adminEmail, adminName);
   }
