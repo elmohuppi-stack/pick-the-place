@@ -2,26 +2,34 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-interface EventInfo {
-  id: string;
-  title: string;
+/**
+ * Editor für einen Einladungstext. Zeigt je nach `kind` das Vorschlags- oder
+ * Abstimmungs-Textfeld. Der eigentliche Versand passiert nicht mehr hier,
+ * sondern als Weiter-Aktion im jeweiligen Wizard-Schritt.
+ */
+export function EmailTemplateEditor({
+  eventId,
+  kind,
+  proposalEmailText,
+  voteEmailText,
+}: {
+  eventId: string;
+  kind: "proposal" | "vote";
   proposalEmailText: string | null;
   voteEmailText: string | null;
-}
-
-export function EmailManager({ event }: { event: EventInfo }) {
-  const [proposalText, setProposalText] = useState(
-    event.proposalEmailText || "",
-  );
-  const [voteText, setVoteText] = useState(event.voteEmailText || "");
+}) {
+  const [proposalText, setProposalText] = useState(proposalEmailText || "");
+  const [voteText, setVoteText] = useState(voteEmailText || "");
   const [saving, setSaving] = useState(false);
-  const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
 
-  async function saveTemplates() {
+  const value = kind === "proposal" ? proposalText : voteText;
+  const setValue = kind === "proposal" ? setProposalText : setVoteText;
+
+  async function save() {
     setSaving(true);
     setResult(null);
     try {
@@ -29,18 +37,18 @@ export function EmailManager({ event }: { event: EventInfo }) {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          eventId: event.id,
+          eventId,
           proposalEmailText: proposalText || null,
           voteEmailText: voteText || null,
         }),
       });
       if (res.ok) {
-        setResult({ type: "success", text: "Texte gespeichert!" });
+        setResult({ type: "success", text: "Text gespeichert!" });
       } else {
-        const errData = await res.json().catch(() => ({}));
+        const data = await res.json().catch(() => ({}));
         setResult({
           type: "error",
-          text: `Fehler: ${errData.error || `${res.status} ${res.statusText}`}`,
+          text: `Fehler: ${data.error || `${res.status} ${res.statusText}`}`,
         });
       }
     } catch (err) {
@@ -53,187 +61,65 @@ export function EmailManager({ event }: { event: EventInfo }) {
     }
   }
 
-  async function sendEmails(type: "proposal" | "vote") {
-    setSending(true);
-    setResult(null);
-
-    try {
-      const res = await fetch("/api/email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventId: event.id, type }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        let text = `${data.sent} von ${data.total} E-Mails erfolgreich versendet.`;
-        if (data.failed > 0) {
-          text += ` ${data.failed} fehlgeschlagen.`;
-          if (data.errors?.length) {
-            text += ` Details: ${data.errors.join("; ")}`;
-          }
-        }
-        setResult({ type: data.failed > 0 ? "error" : "success", text });
-      } else {
-        setResult({
-          type: "error",
-          text: data.error || "Fehler beim Versenden",
-        });
-      }
-    } catch {
-      setResult({ type: "error", text: "Ein Fehler ist aufgetreten" });
-    } finally {
-      setSending(false);
-    }
-  }
-
   return (
-    <div className="space-y-6">
+    <div className="mt-3 rounded-xl border border-theme-card bg-slate-50/50 dark:bg-slate-900/30 p-4 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <h4 className="text-sm font-semibold text-theme-primary">
+          {kind === "proposal" ? "Vorschlags-E-Mail" : "Abstimmungs-E-Mail"}
+        </h4>
+        <button
+          onClick={save}
+          disabled={saving}
+          className="px-3 py-1.5 btn btn-primary text-sm disabled:opacity-50"
+        >
+          {saving ? "Speichert…" : "Speichern"}
+        </button>
+      </div>
+      <p className="text-xs text-theme-muted">
+        Platzhalter:{" "}
+        <code className="text-revenexx-600 dark:text-revenexx-400">
+          EVENTNAME
+        </code>
+        ,{" "}
+        <code className="text-revenexx-600 dark:text-revenexx-400">NAME</code>
+        {kind === "vote" && (
+          <>
+            ,{" "}
+            <code className="text-revenexx-600 dark:text-revenexx-400">
+              ROUND
+            </code>
+          </>
+        )}
+        . Leer lassen = Standardtext.
+      </p>
+      <textarea
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        rows={3}
+        className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm resize-none"
+        placeholder={
+          kind === "proposal"
+            ? "Du bist eingeladen, einen Ort für das Event EVENTNAME vorzuschlagen."
+            : "Runde ROUND der Ortswahl für EVENTNAME ist gestartet!"
+        }
+      />
       {result && (
-        <div
-          className={`p-3 rounded-xl text-sm ${
+        <p
+          className={`text-sm ${
             result.type === "success"
-              ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-              : "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+              ? "text-green-600 dark:text-green-400"
+              : "text-red-600 dark:text-red-400"
           }`}
         >
           {result.text}
-        </div>
+        </p>
       )}
-
-      <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-theme-primary">
-            E-Mail-Texte anpassen
-          </h2>
-          <button
-            onClick={saveTemplates}
-            disabled={saving}
-            className="px-4 py-2 btn btn-primary text-sm disabled:opacity-50"
-          >
-            {saving ? "Wird gespeichert..." : "Speichern"}
-          </button>
-        </div>
-        <p className="text-xs text-theme-muted">
-          Verwende{" "}
-          <code className="text-revenexx-600 dark:text-revenexx-400">
-            EVENTNAME
-          </code>{" "}
-          für den Event-Namen,{" "}
-          <code className="text-revenexx-600 dark:text-revenexx-400">NAME</code>{" "}
-          für den Namen des Teilnehmers und{" "}
-          <code className="text-revenexx-600 dark:text-revenexx-400">ROUND</code>{" "}
-          für die Rundennummer. Leer lassen = Standardtext.
-        </p>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="block text-sm font-medium text-theme-primary mb-1">
-              Vorschlag-Text
-            </label>
-            <textarea
-              value={proposalText}
-              onChange={(e) => setProposalText(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm resize-none"
-              rows={3}
-              placeholder="Du bist eingeladen, einen Ort für das Event EVENTNAME vorzuschlagen."
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-theme-primary mb-1">
-              Abstimmungs-Text
-            </label>
-            <textarea
-              value={voteText}
-              onChange={(e) => setVoteText(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm resize-none"
-              rows={3}
-              placeholder="Runde ROUND der Ortswahl für EVENTNAME ist gestartet!"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card">
-          <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-4">
-            <svg
-              className="w-6 h-6 text-amber-600 dark:text-amber-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-              />
-            </svg>
-          </div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
-            Vorschlags-Einladung
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-            Lade Teilnehmer ein, Orte für das Jahrestreffen vorzuschlagen.
-          </p>
-          <button
-            onClick={() => sendEmails("proposal")}
-            disabled={sending}
-            className="w-full py-2.5 px-4 btn btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {sending ? "Wird gesendet..." : "Einladungen senden"}
-          </button>
-        </div>
-
-        <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60">
-          <div className="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center mb-4">
-            <svg
-              className="w-6 h-6 text-green-600 dark:text-green-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-              />
-            </svg>
-          </div>
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">
-            Abstimmungs-Einladung
-          </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-            Lade Teilnehmer zur aktuellen Abstimmungsrunde ein.
-          </p>
-          <button
-            onClick={() => sendEmails("vote")}
-            disabled={sending}
-            className="w-full py-2.5 px-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-medium rounded-xl hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {sending ? "Wird gesendet..." : "Einladungen senden"}
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-          Hinweis
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Die E-Mails werden automatisch mit den Magic Links versendet. Jeder
-          Teilnehmer erhält einen persönlichen Link, über den er sich
-          authentifizieren kann.
-          <ResendWarning />
-        </p>
-      </div>
     </div>
   );
 }
 
-function ResendWarning() {
+/** Hinweis, dass ohne RESEND_API_KEY nur simuliert wird. */
+export function ResendWarning() {
   const [configured, setConfigured] = useState(true);
 
   const check = useCallback(() => {
@@ -250,9 +136,9 @@ function ResendWarning() {
   if (configured) return null;
 
   return (
-    <span className="block mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg">
-      ⚠️ <strong>RESEND_API_KEY</strong> ist nicht konfiguriert. E-Mails werden
-      nur simuliert (im Log ausgegeben).
-    </span>
+    <p className="mt-3 p-2 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-lg">
+      ⚠️ <strong>RESEND_API_KEY</strong> ist nicht konfiguriert – E-Mails werden
+      nur simuliert (im Protokoll sichtbar).
+    </p>
   );
 }

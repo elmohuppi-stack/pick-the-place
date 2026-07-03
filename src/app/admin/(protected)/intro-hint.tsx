@@ -1,57 +1,38 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
-const STORAGE_KEY = "ptp.introOpen";
+import { useState } from "react";
 
 const PHASES = [
   {
-    label: "Vorbereitung",
-    text: "Für jedes neue Event sind die revenexx-Kollegen bereits als Teilnehmer hinterlegt. Passe die Liste bei Bedarf an – deaktiviere einzelne Personen oder füge neue hinzu. Danach öffnest du die Vorschlagsphase.",
+    label: "1 · Vorbereitung",
+    text: "Für jedes neue Event sind die revenexx-Kollegen automatisch als Teilnehmer hinterlegt. Prüfe die Liste – deaktiviere einzelne Personen oder füge weitere hinzu. Optional kannst du einen Termin und eine Beschreibung setzen.",
   },
   {
-    label: "Vorschläge",
-    text: "Jeder Teilnehmer erhält einen persönlichen Link und schlägt Orte vor. Du aktivierst die Orte, die zur Abstimmung stehen sollen.",
+    label: "2 · Einladen & Vorschläge",
+    text: "Mit „Einladungen versenden & Vorschlagsphase starten“ bekommt jeder Teilnehmer einen persönlichen Magic Link und reicht darüber Ortsvorschläge ein. Du aktivierst die Orte, die zur Abstimmung stehen sollen. Den Einladungstext kannst du vorher anpassen.",
   },
   {
-    label: "Abstimmung",
-    text: "Alle stimmen über ihren persönlichen Link für einen Ort ab. Den Zwischenstand verfolgst du live im Admin-Bereich.",
+    label: "3 · Abstimmung",
+    text: "„Abstimmung starten & einladen“ öffnet die Runde und lädt alle zur Abstimmung ein. Jeder wählt über seinen Link genau einen Ort – oder enthält sich. Teilnahme-Fortschritt und Zwischenstand siehst du live.",
   },
   {
-    label: "Ergebnis",
-    text: "Erreicht ein Ort über 50 %, steht der Sieger fest. Andernfalls startest du eine Stichwahl zwischen den stärksten Orten – oder schließt das Event ab.",
+    label: "4 · Ergebnis",
+    text: "Erreicht ein Ort über 50 %, steht der Sieger fest. Andernfalls startest du eine Stichwahl zwischen den stärksten Orten. Zum Schluss schließt du das Event ab – der gesamte Ablauf bleibt im Protokoll nachvollziehbar.",
   },
 ];
 
 export function IntroHint() {
-  // Erst nach dem Mount rendern, um Hydration-Mismatch mit localStorage zu vermeiden.
-  const [ready, setReady] = useState(false);
-  // Standardmäßig offen; die gemerkte Wahl überschreibt das nach dem Mount.
-  const [open, setOpen] = useState(true);
-
-  useEffect(() => {
-    setOpen(localStorage.getItem(STORAGE_KEY) !== "0");
-    setReady(true);
-  }, []);
-
-  if (!ready) return null;
-
-  function toggle() {
-    setOpen((prev) => {
-      const next = !prev;
-      localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
-      return next;
-    });
-  }
+  const [open, setOpen] = useState(false);
 
   return (
-    <div className="bg-theme-card backdrop-blur-sm rounded-2xl shadow-sm border border-theme-card overflow-hidden">
-      <button
-        onClick={toggle}
-        aria-expanded={open}
-        className="flex w-full items-center gap-2.5 px-5 py-4 text-left"
-      >
-        <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-revenexx-100 dark:bg-revenexx-900/30 text-revenexx-600 dark:text-revenexx-400">
+    <>
+      <span className="relative inline-flex group">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="So funktioniert Pick the Place"
+          className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-revenexx-100 dark:bg-revenexx-900/30 text-revenexx-600 dark:text-revenexx-400 hover:bg-revenexx-200 dark:hover:bg-revenexx-900/50 transition-colors"
+        >
           <svg
             className="w-4 h-4"
             fill="none"
@@ -65,43 +46,92 @@ export function IntroHint() {
               d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
             />
           </svg>
-        </span>
-        <span className="flex-1 text-sm font-semibold text-theme-primary">
+        </button>
+        {/* Tooltip beim Hover/Fokus */}
+        <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-slate-900 dark:bg-slate-700 px-2.5 py-1.5 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
           So funktioniert Pick the Place
         </span>
-        <svg
-          className={`w-4 h-4 text-theme-muted transition-transform ${open ? "rotate-180" : ""}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-          aria-hidden
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="m19.5 8.25-7.5 7.5-7.5-7.5"
-          />
-        </svg>
-      </button>
+      </span>
 
       {open && (
-        <ol className="grid gap-4 px-5 pb-5 sm:grid-cols-2">
-          {PHASES.map((p, i) => (
-            <li key={p.label} className="flex gap-3">
-              <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-revenexx-100 dark:bg-revenexx-900/30 text-revenexx-600 dark:text-revenexx-400 text-xs font-semibold">
-                {i + 1}
-              </span>
-              <span className="text-sm text-theme-secondary leading-relaxed">
-                <span className="font-medium text-theme-primary">
-                  {p.label}:
-                </span>{" "}
-                {p.text}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4 sm:p-6"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-2xl my-8 bg-theme-card rounded-2xl p-6 sm:p-8 shadow-xl border border-theme-card text-left"
+          >
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-revenexx-100 dark:bg-revenexx-900/30 text-revenexx-600 dark:text-revenexx-400">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
+                    />
+                  </svg>
+                </span>
+                <h3 className="text-lg font-semibold text-theme-primary">
+                  So funktioniert Pick the Place
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Schließen"
+                className="flex-shrink-0 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18 18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <p className="text-sm text-theme-secondary leading-relaxed mb-5">
+              Pick the Place führt euch in vier Phasen zum gemeinsamen Ort. Ein
+              Assistent im Event zeigt dir immer den nächsten Schritt und die
+              passende Aktion; abgeschlossene Schritte kannst du jederzeit wieder
+              ansehen.
+            </p>
+
+            <ol className="space-y-4">
+              {PHASES.map((p) => (
+                <li key={p.label} className="flex gap-3">
+                  <span className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-revenexx-500" />
+                  <div>
+                    <p className="text-sm font-semibold text-theme-primary">
+                      {p.label}
+                    </p>
+                    <p className="text-sm text-theme-secondary leading-relaxed">
+                      {p.text}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
       )}
-    </div>
+    </>
   );
 }
