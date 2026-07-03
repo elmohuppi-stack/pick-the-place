@@ -8,10 +8,30 @@ interface Participant {
   name: string;
   email: string;
   authToken: string;
+  isActive: boolean;
   createdAt: string;
 }
 
-export function ParticipantManager({ eventId }: { eventId: string }) {
+/** Phasenabhängiger persönlicher Teilnehmer-Link (Pfad + Beschriftung). */
+function participantLinkInfo(status: string): { path: string; label: string } {
+  switch (status) {
+    case "voting":
+      return { path: "/vote", label: "Abstimmungs-Link" };
+    case "results":
+    case "closed":
+      return { path: "/results", label: "Ergebnis-Link" };
+    default: // setup, proposal
+      return { path: "/propose", label: "Vorschlags-Link" };
+  }
+}
+
+export function ParticipantManager({
+  eventId,
+  status,
+}: {
+  eventId: string;
+  status: string;
+}) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -106,6 +126,24 @@ export function ParticipantManager({ eventId }: { eventId: string }) {
     setLoading(false);
   }
 
+  async function toggleActive(id: string, isActive: boolean) {
+    // Optimistisch umschalten, damit der Toggle sofort reagiert.
+    setParticipants((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, isActive } : p)),
+    );
+    try {
+      const res = await fetch(`/api/participants?id=${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      setMessage({ type: "error", text: "Status konnte nicht geändert werden" });
+      fetchParticipants();
+    }
+  }
+
   async function removeParticipant(id: string) {
     if (!confirm("Teilnehmer wirklich entfernen?")) return;
 
@@ -117,10 +155,12 @@ export function ParticipantManager({ eventId }: { eventId: string }) {
     }
   }
 
+  const linkInfo = participantLinkInfo(status);
+
   function copyLink(token: string) {
-    const url = `${window.location.origin}/propose?token=${token}`;
+    const url = `${window.location.origin}${linkInfo.path}?token=${token}`;
     navigator.clipboard.writeText(url);
-    setMessage({ type: "success", text: "Link kopiert!" });
+    setMessage({ type: "success", text: `${linkInfo.label} kopiert!` });
   }
 
   return (
@@ -140,7 +180,8 @@ export function ParticipantManager({ eventId }: { eventId: string }) {
       <div className="bg-theme-card backdrop-blur-sm rounded-2xl shadow-sm border border-theme-card overflow-hidden">
         <div className="px-6 py-4 border-b border-theme-card flex items-center justify-between">
           <h2 className="text-lg font-semibold text-theme-primary">
-            Teilnehmer ({participants.length})
+            Teilnehmer ({participants.filter((p) => p.isActive).length} aktiv /{" "}
+            {participants.length} gesamt)
           </h2>
           <button
             onClick={() => setShowAddForms(!showAddForms)}
@@ -238,20 +279,38 @@ export function ParticipantManager({ eventId }: { eventId: string }) {
             {participants.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between px-6 py-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                className={`flex items-center justify-between px-6 py-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors ${
+                  p.isActive ? "" : "opacity-50"
+                }`}
               >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-theme-primary truncate">
-                    {p.name}
-                  </p>
-                  <p className="text-xs text-theme-muted truncate">{p.email}</p>
+                <div className="min-w-0 flex items-center gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-theme-primary truncate">
+                      {p.name}
+                    </p>
+                    <p className="text-xs text-theme-muted truncate">
+                      {p.email}
+                    </p>
+                  </div>
+                  {!p.isActive && (
+                    <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                      inaktiv
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-3">
                   <button
+                    onClick={() => toggleActive(p.id, !p.isActive)}
+                    className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                  >
+                    {p.isActive ? "Deaktivieren" : "Aktivieren"}
+                  </button>
+                  <button
                     onClick={() => copyLink(p.authToken)}
+                    title={`Persönlichen ${linkInfo.label} kopieren`}
                     className="px-3 py-1.5 text-xs font-medium text-revenexx-600 dark:text-revenexx-400 hover:bg-revenexx-50 dark:hover:bg-revenexx-900/30 rounded-lg transition-colors"
                   >
-                    Link kopieren
+                    {linkInfo.label} kopieren
                   </button>
                   <button
                     onClick={() => removeParticipant(p.id)}

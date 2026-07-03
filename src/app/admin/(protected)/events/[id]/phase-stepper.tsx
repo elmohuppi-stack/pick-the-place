@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   EVENT_PHASES,
   majorityWinner,
+  topLocation,
   runoffLocationIds,
   type LocationResult,
 } from "@/lib/event-status";
@@ -167,10 +168,11 @@ export function PhaseStepper({
     }
   }
 
-  const winner =
-    lastRound && lastRound.locations.length
-      ? majorityWinner(lastRound.locations)
-      : null;
+  const results = lastRound?.locations ?? [];
+  const winner = results.length ? majorityWinner(results) : null;
+  const favorite = results.length ? topLocation(results) : null;
+  const showBanner =
+    (status === "results" || status === "closed") && results.length > 0;
 
   return (
     <div className="space-y-4">
@@ -234,6 +236,11 @@ export function PhaseStepper({
         })}
       </div>
 
+      {/* Prominenter Ergebnis-Banner */}
+      {showBanner && (
+        <ResultBanner winner={winner} favorite={favorite} results={results} />
+      )}
+
       {/* Nächster Schritt */}
       <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-theme-card">
         <p className="text-xs font-semibold uppercase tracking-wider text-revenexx-600 dark:text-revenexx-400 mb-2">
@@ -252,7 +259,6 @@ export function PhaseStepper({
           activeLocationCount={activeLocationCount}
           roundCount={roundCount}
           winnerName={winner?.name ?? null}
-          winnerPct={winner ? Math.round(winner.percentage) : null}
           busy={busy}
           goTab={goTab}
           setStatus={setStatus}
@@ -271,7 +277,6 @@ interface NextStepProps {
   activeLocationCount: number;
   roundCount: number;
   winnerName: string | null;
-  winnerPct: number | null;
   busy: boolean;
   goTab: (tab: string) => void;
   setStatus: (s: string) => void;
@@ -286,7 +291,6 @@ function NextStep(props: NextStepProps) {
     participantCount,
     activeLocationCount,
     winnerName,
-    winnerPct,
     busy,
     goTab,
     setStatus,
@@ -370,9 +374,7 @@ function NextStep(props: NextStepProps) {
   if (status === "results") {
     if (winnerName) {
       return (
-        <Block
-          text={`🏆 Sieger steht fest: ${winnerName} (${winnerPct}% der Stimmen).`}
-        >
+        <Block text="Das Ergebnis steht fest. Schließe das Event ab oder sieh dir die Details an.">
           <button
             className={primary}
             disabled={busy}
@@ -433,6 +435,89 @@ function Block({
     <div>
       <p className="text-sm text-theme-secondary mb-3">{text}</p>
       <div className="flex flex-wrap gap-2">{children}</div>
+    </div>
+  );
+}
+
+/** Prominenter Ergebnis-Banner: Sieger (>50 %) oder Favorit + Balken der Top-Orte. */
+function ResultBanner({
+  winner,
+  favorite,
+  results,
+}: {
+  winner: LocationResult | null;
+  favorite: LocationResult | null;
+  results: LocationResult[];
+}) {
+  const highlight = winner ?? favorite;
+  if (!highlight) return null;
+
+  const isWinner = winner !== null;
+  const sorted = [...results].sort((a, b) => b.voteCount - a.voteCount);
+  const topBars = sorted.slice(0, 5);
+
+  return (
+    <div
+      className={`rounded-2xl p-6 shadow-sm border ${
+        isWinner
+          ? "border-blue-200 dark:border-blue-800/50 bg-gradient-to-br from-blue-50 to-revenexx-50 dark:from-blue-900/20 dark:to-revenexx-900/20"
+          : "border-amber-200 dark:border-amber-800/50 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/10"
+      }`}
+    >
+      <div className="flex items-center gap-4">
+        <span className="text-4xl leading-none" aria-hidden>
+          {isWinner ? "🏆" : "⭐"}
+        </span>
+        <div className="min-w-0">
+          <p
+            className={`text-xs font-semibold uppercase tracking-wider ${
+              isWinner
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-amber-600 dark:text-amber-400"
+            }`}
+          >
+            {isWinner ? "Sieger" : "Favorit · keine absolute Mehrheit"}
+          </p>
+          <p className="text-2xl font-bold text-theme-primary truncate">
+            {highlight.name}
+          </p>
+          <p className="text-sm text-theme-secondary">
+            {Math.round(highlight.percentage)}% der Stimmen ·{" "}
+            {highlight.voteCount}{" "}
+            {highlight.voteCount === 1 ? "Stimme" : "Stimmen"}
+          </p>
+        </div>
+      </div>
+
+      {topBars.length > 0 && (
+        <div className="mt-5 space-y-2">
+          {topBars.map((loc) => {
+            const isTop = loc.id === highlight.id;
+            return (
+              <div key={loc.id} className="flex items-center gap-3 text-sm">
+                <span className="w-32 shrink-0 truncate text-theme-secondary">
+                  {loc.name}
+                </span>
+                <div className="flex-1 h-2 rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${
+                      isTop
+                        ? isWinner
+                          ? "bg-blue-500"
+                          : "bg-amber-500"
+                        : "bg-slate-400 dark:bg-slate-500"
+                    }`}
+                    style={{ width: `${Math.max(loc.percentage, 2)}%` }}
+                  />
+                </div>
+                <span className="w-10 shrink-0 text-right tabular-nums text-theme-muted">
+                  {Math.round(loc.percentage)}%
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

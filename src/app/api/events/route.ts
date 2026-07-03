@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
+import { COLLEAGUES } from "@/lib/colleagues";
+import { generateAuthToken } from "@/lib/utils";
 
 export async function GET() {
   const session = await getAdminSession();
@@ -24,7 +26,7 @@ export async function POST(request: NextRequest) {
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { title, description } = await request.json();
+  const { title, description, eventDate } = await request.json();
 
   if (!title) {
     return NextResponse.json({ error: "Titel erforderlich" }, { status: 400 });
@@ -35,11 +37,24 @@ export async function POST(request: NextRequest) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
 
+  const parsedDate = eventDate ? new Date(eventDate) : null;
+
   const event = await prisma.event.create({
     data: {
       title,
       slug: `${slug}-${Date.now()}`,
       description,
+      eventDate:
+        parsedDate && !isNaN(parsedDate.getTime()) ? parsedDate : null,
+      // revenexx-Kollegen als aktive Default-Teilnehmer vorbefüllen; pro Event
+      // deaktivier- oder erweiterbar.
+      participants: {
+        create: COLLEAGUES.map((c) => ({
+          name: c.name,
+          email: c.email,
+          authToken: generateAuthToken(),
+        })),
+      },
     },
   });
 

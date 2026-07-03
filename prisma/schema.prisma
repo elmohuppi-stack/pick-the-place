@@ -13,6 +13,7 @@ model Event {
   slug               String      @unique
   description        String?
   status             EventStatus @default(setup)
+  eventDate          DateTime?
   proposalEmailText  String?
   voteEmailText      String?
   createdAt          DateTime    @default(now())
@@ -29,6 +30,7 @@ model Participant {
   name      String
   email     String
   authToken String   @unique
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
   event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
@@ -62,8 +64,9 @@ model VotingRound {
   endsAt      DateTime?
   createdAt   DateTime    @default(now())
 
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  votes Vote[]
+  event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  votes     Vote[]
+  emailLogs EmailLog[]
 }
 
 model Vote {
@@ -92,10 +95,14 @@ model AdminUser {
 model EmailLog {
   id            String    @id @default(uuid())
   participantId String
+  votingRoundId String?
   type          EmailType
+  status        String    @default("sent")
+  error         String?
   sentAt        DateTime  @default(now())
 
-  participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  participant Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  votingRound VotingRound? @relation(fields: [votingRoundId], references: [id], onDelete: SetNull)
 }
 
 enum EventStatus {
