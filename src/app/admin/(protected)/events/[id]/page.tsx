@@ -14,7 +14,7 @@ export default async function EventWorkspacePage({
     where: { id },
     include: {
       participants: {
-        select: { id: true, name: true, email: true },
+        select: { id: true, name: true, email: true, isActive: true },
         orderBy: { createdAt: "asc" },
       },
       locations: {

@@ -23,7 +23,12 @@ interface WorkspaceEvent {
   eventDate: string | Date | null;
   proposalEmailText: string | null;
   voteEmailText: string | null;
-  participants: { id: string; name: string; email: string }[];
+  participants: {
+    id: string;
+    name: string;
+    email: string;
+    isActive: boolean;
+  }[];
   locations: {
     id: string;
     name: string;
