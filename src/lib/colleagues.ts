@@ -1,24 +1,15 @@
 /**
- * Feste revenexx-Kollegenliste – gemeinsame Quelle für Default-Teilnehmer neuer
- * Events (siehe events-Route) und für die Admin-Zugänge (siehe ensureAdminSeeded).
- * Es gibt nur E-Mails; der Anzeigename wird aus dem Local-Part abgeleitet.
+ * revenexx-Kollegenliste – gemeinsame Quelle für Default-Teilnehmer neuer Events
+ * (siehe events-Route) und für die Admin-Zugänge (siehe ensureAdminSeeded).
+ *
+ * Die Adressen stehen bewusst NICHT im Code, sondern in der nicht eingecheckten
+ * Umgebungsvariable `COLLEAGUE_EMAILS` (kommagetrennt), damit sie nicht öffentlich
+ * im Repository landen. Nur serverseitig verwendet. Fehlt die Variable, ist die
+ * Liste leer (neue Events starten dann ohne vorbefüllte Teilnehmer).
+ *
+ * Beispiel .env:
+ *   COLLEAGUE_EMAILS="vorname.nachname@example.com,zweite.person@example.com"
  */
-export const COLLEAGUE_EMAILS = [
-  "elmar.hepp@revenexx.com",
-  "alexander.bystrow@revenexx.com",
-  "christopher.voitus@revenexx.com",
-  "clemens.bastian@revenexx.com",
-  "johannes.heizmann@revenexx.com",
-  "jonathan.kraut@revenexx.com",
-  "martin.hummel@revenexx.com",
-  "martin.mohr@revenexx.com",
-  "michael.doehler@revenexx.com",
-  "michael.wachs@revenexx.com",
-  "patrick.graef@revenexx.com",
-  "thomas.mondelli@revenexx.com",
-  "tilmann.schaefer@revenexx.com",
-  "wolfram.schmale@revenexx.com",
-] as const;
 
 /** „elmar.hepp@revenexx.com" → „Elmar Hepp". */
 export function colleagueNameFromEmail(email: string): string {
@@ -30,12 +21,24 @@ export function colleagueNameFromEmail(email: string): string {
     .join(" ");
 }
 
+/** E-Mails aus `COLLEAGUE_EMAILS` parsen (Trennung per Komma/Semikolon/Whitespace). */
+export function getColleagueEmails(): string[] {
+  const raw = process.env.COLLEAGUE_EMAILS ?? "";
+  return raw
+    .split(/[,;\s]+/)
+    .map((e) => e.trim())
+    .filter(Boolean);
+}
+
 export interface Colleague {
   email: string;
   name: string;
 }
 
-export const COLLEAGUES: Colleague[] = COLLEAGUE_EMAILS.map((email) => ({
-  email,
-  name: colleagueNameFromEmail(email),
-}));
+/** Abgeleitete Kollegenliste `{ email, name }[]` aus der Umgebungsvariable. */
+export function getColleagues(): Colleague[] {
+  return getColleagueEmails().map((email) => ({
+    email,
+    name: colleagueNameFromEmail(email),
+  }));
+}

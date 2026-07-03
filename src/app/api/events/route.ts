@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
-import { COLLEAGUES } from "@/lib/colleagues";
+import { getColleagues } from "@/lib/colleagues";
 import { generateAuthToken } from "@/lib/utils";
 
 export async function GET() {
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       // revenexx-Kollegen als aktive Default-Teilnehmer vorbefüllen; pro Event
       // deaktivier- oder erweiterbar.
       participants: {
-        create: COLLEAGUES.map((c) => ({
+        create: getColleagues().map((c) => ({
           name: c.name,
           email: c.email,
           authToken: generateAuthToken(),
