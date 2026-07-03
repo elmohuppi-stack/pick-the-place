@@ -102,7 +102,7 @@ model EmailLog {
   sentAt        DateTime  @default(now())
 
   participant Participant  @relation(fields: [participantId], references: [id], onDelete: Cascade)
-  votingRound VotingRound? @relation(fields: [votingRoundId], references: [id], onDelete: SetNull)
+  votingRound VotingRound? @relation(fields: [votingRoundId], references: [id], onDelete: Cascade)
 }
 
 enum EventStatus {
