@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PoweredByRevenexx } from "@/components/ui/Brand";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 export default function AdminLoginPage() {
   const searchParams = useSearchParams();
@@ -128,12 +129,11 @@ export default function AdminLoginPage() {
               >
                 Neues Passwort
               </label>
-              <input
+              <PasswordInput
                 id="newPassword"
-                type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-2.5 pr-11 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none transition-all"
                 placeholder="••••••••"
                 required
                 minLength={8}
@@ -146,12 +146,11 @@ export default function AdminLoginPage() {
               >
                 Passwort bestätigen
               </label>
-              <input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-2.5 pr-11 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none transition-all"
                 placeholder="••••••••"
                 required
                 minLength={8}
