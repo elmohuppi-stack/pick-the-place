@@ -72,11 +72,20 @@ export function CreateEventForm() {
   }
 
   return (
-    <div className="bg-theme-card backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-theme-card">
-      <h3 className="text-lg font-semibold text-theme-primary mb-4">
-        Neues Event erstellen
-      </h3>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 backdrop-blur-sm p-4 sm:p-6"
+      onClick={() => setShowForm(false)}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg my-8 bg-theme-card rounded-2xl p-6 sm:p-8 shadow-xl border border-theme-card text-left"
+      >
+        <h3 className="text-lg font-semibold text-theme-primary mb-4">
+          Neues Event erstellen
+        </h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-theme-primary mb-1">
             Titel *
@@ -137,7 +146,8 @@ export function CreateEventForm() {
             Abbrechen
           </button>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
