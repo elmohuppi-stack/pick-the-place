@@ -94,8 +94,7 @@ function LogRow({ item }: { item: ActivityItem }) {
         <span className="font-medium text-theme-primary">
           {item.participant}
         </span>{" "}
-        hat{" "}
-        <span className="font-medium">{item.locationName}</span>{" "}
+        hat <span className="font-medium">{item.locationName}</span>{" "}
         vorgeschlagen
       </>
     );
