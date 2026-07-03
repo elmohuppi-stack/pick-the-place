@@ -8,7 +8,19 @@ interface EventData {
   status: string;
   votingRounds: VotingRoundData[];
   locations: LocationData[];
-  participants: { id: string; name: string; email: string }[];
+  participants: {
+    id: string;
+    name: string;
+    email: string;
+    isActive: boolean;
+  }[];
+}
+
+/** Live-Kennzahlen einer Runde aus /api/results. */
+interface RoundMeta {
+  status: string;
+  respondedCount: number;
+  abstentions: number;
 }
 
 interface VotingRoundData {
@@ -41,35 +53,73 @@ export function RoundManager({ event }: { event: EventData }) {
     text: string;
   } | null>(null);
   const [results, setResults] = useState<Record<string, RoundResult[]>>({});
+  const [roundMeta, setRoundMeta] = useState<Record<string, RoundMeta>>({});
   const [expandedRound, setExpandedRound] = useState<string | null>(null);
 
+  const activeRound =
+    event.votingRounds.find((r) => r.status === "active") ?? null;
+  const activeRoundId = activeRound?.id ?? null;
+
+  // Ergebnisse laden – und solange eine Runde läuft, alle paar Sekunden neu,
+  // damit der Admin live sieht, wer schon abgestimmt hat und wie es steht.
   useEffect(() => {
-    fetch(`/api/results?eventId=${event.id}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.rounds) {
-          const byRound: Record<string, RoundResult[]> = {};
-          for (const r of data.rounds) {
-            byRound[r.id] = r.locations.map(
-              (loc: {
-                id: string;
-                name: string;
-                voteCount: number;
-                percentage: number;
-              }) => ({
-                id: loc.id,
-                locationName: loc.name,
-                voteCount: loc.voteCount,
-                totalVotes: r.votes.length,
-                percentage: loc.percentage,
-              }),
-            );
-          }
-          setResults(byRound);
+    let cancelled = false;
+
+    async function loadResults() {
+      try {
+        const res = await fetch(`/api/results?eventId=${event.id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled || !data.rounds) return;
+
+        const byRound: Record<string, RoundResult[]> = {};
+        const meta: Record<string, RoundMeta> = {};
+        for (const r of data.rounds) {
+          byRound[r.id] = r.locations.map(
+            (loc: {
+              id: string;
+              name: string;
+              voteCount: number;
+              percentage: number;
+            }) => ({
+              id: loc.id,
+              locationName: loc.name,
+              voteCount: loc.voteCount,
+              totalVotes: r.votes.length,
+              percentage: loc.percentage,
+            }),
+          );
+          meta[r.id] = {
+            status: r.status,
+            respondedCount: r.respondedCount ?? r.votes.length,
+            abstentions: r.abstentions ?? 0,
+          };
         }
-      })
-      .catch(() => {});
-  }, [event.id]);
+        setResults(byRound);
+        setRoundMeta(meta);
+
+        // Runde serverseitig geschlossen (alle abgestimmt / manuell beendet)?
+        // Dann neu laden, damit Phase & »Bisherige Runden« aktuell sind.
+        if (
+          activeRoundId &&
+          meta[activeRoundId] &&
+          meta[activeRoundId].status !== "active"
+        ) {
+          window.location.reload();
+        }
+      } catch {
+        // Netzwerkfehler beim Polling ignorieren – nächster Tick versucht's erneut.
+      }
+    }
+
+    loadResults();
+    if (!activeRoundId) return;
+    const interval = setInterval(loadResults, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [event.id, activeRoundId]);
 
   async function endRound(roundId: string) {
     try {
@@ -118,6 +168,38 @@ export function RoundManager({ event }: { event: EventData }) {
 
   const activeLocations = event.locations;
 
+  // Live-Kennzahlen der laufenden Runde (aus den gepollten Ergebnissen)
+  const activeParticipantCount = event.participants.filter(
+    (p) => p.isActive,
+  ).length;
+  const activeMeta = activeRoundId ? roundMeta[activeRoundId] : undefined;
+  const activeResults = activeRoundId ? results[activeRoundId] : undefined;
+  const respondedCount = activeMeta?.respondedCount ?? 0;
+  const abstentions = activeMeta?.abstentions ?? 0;
+  const realVoteTotal = respondedCount - abstentions;
+  const votedPercent =
+    activeParticipantCount > 0
+      ? Math.min(100, (respondedCount / activeParticipantCount) * 100)
+      : 0;
+
+  const countById = new Map<string, number>(
+    (activeResults ?? []).map((r) => [r.id, r.voteCount]),
+  );
+  const maxLiveCount = Math.max(0, ...countById.values());
+  const liveTally = activeLocations
+    .map((loc) => {
+      const voteCount = countById.get(loc.id) ?? 0;
+      return {
+        id: loc.id,
+        name: loc.name,
+        voteCount,
+        percentage:
+          realVoteTotal > 0 ? (voteCount / realVoteTotal) * 100 : 0,
+        isLeader: maxLiveCount > 0 && voteCount === maxLiveCount,
+      };
+    })
+    .sort((a, b) => b.voteCount - a.voteCount);
+
   return (
     <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-700/60 overflow-hidden">
       <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
@@ -143,6 +225,97 @@ export function RoundManager({ event }: { event: EventData }) {
       )}
 
       <div className="p-6 space-y-4">
+        {/* Live-Auswertung der laufenden Runde */}
+        {activeRound && (
+          <div className="rounded-xl border border-green-200 dark:border-green-800/50 bg-green-50/60 dark:bg-green-900/10 p-4 space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+                </span>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  Runde {activeRound.roundNumber} läuft
+                </h3>
+              </div>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                aktualisiert automatisch
+              </span>
+            </div>
+
+            {/* Teilnahme-Fortschritt */}
+            <div>
+              <div className="flex items-center justify-between text-xs mb-1.5">
+                <span className="font-medium text-slate-700 dark:text-slate-300">
+                  {respondedCount} von {activeParticipantCount} haben abgestimmt
+                  {abstentions > 0 && (
+                    <span className="text-slate-500 dark:text-slate-400 font-normal">
+                      {" "}
+                      · {abstentions} Enthaltung{abstentions !== 1 ? "en" : ""}
+                    </span>
+                  )}
+                </span>
+                <span className="tabular-nums text-slate-500 dark:text-slate-400">
+                  {Math.round(votedPercent)}%
+                </span>
+              </div>
+              <div className="w-full h-2.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-green-500 transition-all"
+                  style={{ width: `${votedPercent}%` }}
+                />
+              </div>
+              {activeParticipantCount - respondedCount > 0 && (
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+                  Noch offen:{" "}
+                  {activeParticipantCount - respondedCount} Teilnehmer
+                </p>
+              )}
+            </div>
+
+            {/* Live-Zwischenstand pro Ort */}
+            <div className="space-y-2 pt-1">
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+                Zwischenstand
+              </p>
+              {realVoteTotal === 0 ? (
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Noch keine Stimme für einen Ort abgegeben.
+                </p>
+              ) : (
+                liveTally.map((loc) => (
+                  <div key={loc.id} className="relative">
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span
+                        className={`font-medium ${
+                          loc.isLeader
+                            ? "text-green-700 dark:text-green-400"
+                            : "text-slate-700 dark:text-slate-300"
+                        }`}
+                      >
+                        {loc.name}
+                        {loc.isLeader && " 🏆"}
+                      </span>
+                      <span className="text-slate-500 dark:text-slate-400 tabular-nums">
+                        {loc.voteCount} Stimme{loc.voteCount !== 1 ? "n" : ""} (
+                        {Math.round(loc.percentage)}%)
+                      </span>
+                    </div>
+                    <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          loc.isLeader ? "bg-green-500" : "bg-revenexx-500"
+                        }`}
+                        style={{ width: `${Math.max(loc.percentage, 2)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Active Locations */}
         {activeLocations.length > 0 && (
           <div>

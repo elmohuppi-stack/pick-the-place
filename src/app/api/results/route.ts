@@ -31,6 +31,10 @@ export async function GET(request: NextRequest) {
         id: round.id,
         roundNumber: round.roundNumber,
         status: round.status,
+        // Gesamtzahl der Abstimmenden (inkl. Enthaltungen) und Enthaltungen –
+        // für die Live-Teilnahmeanzeige im Admin.
+        respondedCount: round.votes.length,
+        abstentions: round.votes.length - realVotes.length,
         votes: realVotes.map((v) => ({ locationId: v.locationId })),
         locations: tallyRoundVotes(round.votes),
       };
