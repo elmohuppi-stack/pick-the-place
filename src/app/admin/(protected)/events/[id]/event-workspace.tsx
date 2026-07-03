@@ -2,18 +2,25 @@
 
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { statusLabel, statusBadgeClasses } from "@/lib/event-status";
+import {
+  statusLabel,
+  statusBadgeClasses,
+  statusDescription,
+} from "@/lib/event-status";
+import { formatDate } from "@/lib/format";
 import { PhaseStepper } from "./phase-stepper";
 import { ParticipantManager } from "./participant-manager";
 import { LocationManager } from "./location-manager";
 import { RoundManager } from "./round-manager";
 import { EmailManager } from "./email-manager";
+import { ActivityLog } from "./activity-log";
 
 interface WorkspaceEvent {
   id: string;
   title: string;
   description: string | null;
   status: string;
+  eventDate: string | Date | null;
   proposalEmailText: string | null;
   voteEmailText: string | null;
   participants: { id: string; name: string; email: string }[];
@@ -40,6 +47,7 @@ const TABS = [
   { key: "locations", label: "Orte" },
   { key: "rounds", label: "Runden" },
   { key: "email", label: "E-Mails" },
+  { key: "log", label: "Protokoll" },
 ];
 
 export function EventWorkspace({ event }: { event: WorkspaceEvent }) {
@@ -89,8 +97,14 @@ export function EventWorkspace({ event }: { event: WorkspaceEvent }) {
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
               {event.description || "Keine Beschreibung"}
             </p>
+            {formatDate(event.eventDate) && (
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                📅 {formatDate(event.eventDate)}
+              </p>
+            )}
           </div>
           <span
+            title={statusDescription(event.status)}
             className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium ${statusBadgeClasses(event.status)}`}
           >
             {statusLabel(event.status)}
@@ -167,6 +181,7 @@ export function EventWorkspace({ event }: { event: WorkspaceEvent }) {
             }}
           />
         )}
+        {activeTab === "log" && <ActivityLog eventId={event.id} />}
       </div>
     </div>
   );

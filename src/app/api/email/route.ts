@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
 import { sendProposalInvite, sendVoteInvite } from "@/lib/email";
+import { logError } from "@/lib/log";
 
 export async function POST(request: NextRequest) {
   const session = await getAdminSession();
@@ -29,6 +30,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (type !== "proposal" && type !== "vote") {
+    return NextResponse.json({ error: "Ungültiger Typ" }, { status: 400 });
+  }
+
   const participants = await prisma.participant.findMany({
     where: { eventId },
   });
@@ -40,65 +45,86 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Für Abstimmungs-Einladungen die aktive Runde einmalig ermitteln – so lässt
+  // sich das Protokoll später einer konkreten Runde zuordnen.
+  let activeRoundId: string | null = null;
+  let activeRoundNumber = 0;
+  if (type === "vote") {
+    const round = await prisma.votingRound.findFirst({
+      where: { eventId, status: "active" },
+      orderBy: { roundNumber: "desc" },
+    });
+    if (!round) {
+      return NextResponse.json(
+        { error: "Keine aktive Abstimmungsrunde" },
+        { status: 400 },
+      );
+    }
+    activeRoundId = round.id;
+    activeRoundNumber = round.roundNumber;
+  }
+
+  const logType = type === "proposal" ? "proposal_invite" : "vote_invite";
+
   let sent = 0;
   let failed = 0;
   const errors: string[] = [];
 
   for (const participant of participants) {
+    let ok = false;
+    let reason: string | null = null;
+
     try {
-      let result;
+      const result =
+        type === "proposal"
+          ? await sendProposalInvite(
+              participant.email,
+              participant.name,
+              participant.authToken,
+              event.title,
+              event.proposalEmailText,
+            )
+          : await sendVoteInvite(
+              participant.email,
+              participant.name,
+              participant.authToken,
+              activeRoundNumber,
+              event.title,
+              event.voteEmailText,
+            );
 
-      if (type === "proposal") {
-        result = await sendProposalInvite(
-          participant.email,
-          participant.name,
-          participant.authToken,
-          event.title,
-          event.proposalEmailText,
-        );
-      } else if (type === "vote") {
-        // Find the latest active voting round
-        const round = await prisma.votingRound.findFirst({
-          where: { eventId, status: "active" },
-          orderBy: { roundNumber: "desc" },
-        });
-
-        if (!round) {
-          return NextResponse.json(
-            { error: "Keine aktive Abstimmungsrunde" },
-            { status: 400 },
-          );
-        }
-
-        result = await sendVoteInvite(
-          participant.email,
-          participant.name,
-          participant.authToken,
-          round.roundNumber,
-          event.title,
-          event.voteEmailText,
-        );
-      } else {
-        return NextResponse.json({ error: "Ungültiger Typ" }, { status: 400 });
-      }
-
-      if (result.success) {
-        await prisma.emailLog.create({
-          data: {
-            participantId: participant.id,
-            type: type === "proposal" ? "proposal_invite" : "vote_invite",
-          },
-        });
-        sent++;
-      } else {
-        const err = (result as any).error;
-        const reason =
-          typeof err === "string" ? err : err?.message || "Unbekannter Fehler";
-        errors.push(`${participant.email}: ${reason}`);
-        failed++;
+      ok = result.success;
+      if (!ok) {
+        const err = (result as { error?: unknown }).error;
+        reason =
+          typeof err === "string"
+            ? err
+            : (err as { message?: string })?.message || "Unbekannter Fehler";
       }
     } catch (err) {
-      const reason = err instanceof Error ? err.message : "Unbekannter Fehler";
+      logError("email.POST", err);
+      reason = err instanceof Error ? err.message : "Unbekannter Fehler";
+    }
+
+    // Versand IMMER protokollieren – auch Fehlversuche, damit sie nachvollziehbar
+    // bleiben (statt nur flüchtig in der HTTP-Antwort).
+    try {
+      await prisma.emailLog.create({
+        data: {
+          participantId: participant.id,
+          votingRoundId: activeRoundId,
+          type: logType,
+          status: ok ? "sent" : "failed",
+          error: reason,
+        },
+      });
+    } catch (err) {
+      logError("email.POST.log", err);
+    }
+
+    if (ok) {
+      sent++;
+    } else {
       errors.push(`${participant.email}: ${reason}`);
       failed++;
     }

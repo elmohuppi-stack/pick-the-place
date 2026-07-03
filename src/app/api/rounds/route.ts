@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdminSession } from "@/lib/auth";
+import { logError } from "@/lib/log";
 
 export async function GET(request: NextRequest) {
   const session = await getAdminSession();
@@ -47,46 +48,54 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
-    include: {
-      locations: { where: { isActive: true } },
-      votingRounds: { orderBy: { roundNumber: "desc" }, take: 1 },
-    },
-  });
+  try {
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: {
+        locations: { where: { isActive: true } },
+        votingRounds: { orderBy: { roundNumber: "desc" }, take: 1 },
+      },
+    });
 
-  if (!event) {
+    if (!event) {
+      return NextResponse.json(
+        { error: "Event nicht gefunden" },
+        { status: 404 },
+      );
+    }
+
+    if (event.locations.length === 0) {
+      return NextResponse.json(
+        { error: "Keine aktiven Orte für diese Runde" },
+        { status: 400 },
+      );
+    }
+
+    const nextRoundNumber = (event.votingRounds[0]?.roundNumber || 0) + 1;
+
+    const round = await prisma.votingRound.create({
+      data: {
+        eventId,
+        roundNumber: nextRoundNumber,
+        status: "active",
+        startsAt: new Date(),
+      },
+    });
+
+    // Update event status to voting
+    await prisma.event.update({
+      where: { id: eventId },
+      data: { status: "voting" },
+    });
+
+    return NextResponse.json(round, { status: 201 });
+  } catch (err) {
+    logError("rounds.POST", err);
     return NextResponse.json(
-      { error: "Event nicht gefunden" },
-      { status: 404 },
+      { error: "Runde konnte nicht gestartet werden" },
+      { status: 500 },
     );
   }
-
-  if (event.locations.length === 0) {
-    return NextResponse.json(
-      { error: "Keine aktiven Orte für diese Runde" },
-      { status: 400 },
-    );
-  }
-
-  const nextRoundNumber = (event.votingRounds[0]?.roundNumber || 0) + 1;
-
-  const round = await prisma.votingRound.create({
-    data: {
-      eventId,
-      roundNumber: nextRoundNumber,
-      status: "active",
-      startsAt: new Date(),
-    },
-  });
-
-  // Update event status to voting
-  await prisma.event.update({
-    where: { id: eventId },
-    data: { status: "voting" },
-  });
-
-  return NextResponse.json(round, { status: 201 });
 }
 
 export async function PATCH(request: NextRequest) {
@@ -103,24 +112,33 @@ export async function PATCH(request: NextRequest) {
 
   const { status, endsAt } = await request.json();
 
-  const updateData: any = {};
-  if (status) updateData.status = status;
-  if (endsAt) updateData.endsAt = new Date(endsAt);
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updateData: any = {};
+    if (status) updateData.status = status;
+    if (endsAt) updateData.endsAt = new Date(endsAt);
 
-  const round = await prisma.votingRound.update({
-    where: { id },
-    data: updateData,
-  });
-
-  if (status === "closed") {
-    // Update event status to results
-    await prisma.event.update({
-      where: { id: round.eventId },
-      data: { status: "results" },
+    const round = await prisma.votingRound.update({
+      where: { id },
+      data: updateData,
     });
-  }
 
-  return NextResponse.json(round);
+    if (status === "closed") {
+      // Update event status to results
+      await prisma.event.update({
+        where: { id: round.eventId },
+        data: { status: "results" },
+      });
+    }
+
+    return NextResponse.json(round);
+  } catch (err) {
+    logError("rounds.PATCH", err);
+    return NextResponse.json(
+      { error: "Runde konnte nicht aktualisiert werden" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function DELETE(request: NextRequest) {

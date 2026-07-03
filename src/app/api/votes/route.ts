@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyParticipantToken } from "@/lib/auth";
+import { logError } from "@/lib/log";
 
 export async function POST(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -11,86 +12,94 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { votingRoundId, locationId } = await request.json();
+  try {
+    const { votingRoundId, locationId } = await request.json();
 
-  if (!votingRoundId || !locationId) {
-    return NextResponse.json(
-      { error: "votingRoundId und locationId erforderlich" },
-      { status: 400 },
-    );
-  }
+    if (!votingRoundId || !locationId) {
+      return NextResponse.json(
+        { error: "votingRoundId und locationId erforderlich" },
+        { status: 400 },
+      );
+    }
 
-  // Verify round is active
-  const round = await prisma.votingRound.findUnique({
-    where: { id: votingRoundId },
-  });
+    // Verify round is active
+    const round = await prisma.votingRound.findUnique({
+      where: { id: votingRoundId },
+    });
 
-  if (!round || round.status !== "active") {
-    return NextResponse.json(
-      { error: "Diese Runde ist nicht aktiv" },
-      { status: 400 },
-    );
-  }
+    if (!round || round.status !== "active") {
+      return NextResponse.json(
+        { error: "Diese Runde ist nicht aktiv" },
+        { status: 400 },
+      );
+    }
 
-  if (round.eventId !== participant.eventId) {
-    return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
-  }
+    if (round.eventId !== participant.eventId) {
+      return NextResponse.json({ error: "Nicht berechtigt" }, { status: 403 });
+    }
 
-  // Check if already voted
-  const existing = await prisma.vote.findUnique({
-    where: {
-      votingRoundId_participantId: {
+    // Check if already voted
+    const existing = await prisma.vote.findUnique({
+      where: {
+        votingRoundId_participantId: {
+          votingRoundId,
+          participantId: participant.id,
+        },
+      },
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "Du hast bereits abgestimmt" },
+        { status: 409 },
+      );
+    }
+
+    // Check if deadline passed
+    if (round.endsAt && new Date() > round.endsAt) {
+      return NextResponse.json(
+        { error: "Die Abstimmungsfrist ist abgelaufen" },
+        { status: 400 },
+      );
+    }
+
+    const vote = await prisma.vote.create({
+      data: {
         votingRoundId,
         participantId: participant.id,
+        locationId,
       },
-    },
-  });
-
-  if (existing) {
-    return NextResponse.json(
-      { error: "Du hast bereits abgestimmt" },
-      { status: 409 },
-    );
-  }
-
-  // Check if deadline passed
-  if (round.endsAt && new Date() > round.endsAt) {
-    return NextResponse.json(
-      { error: "Die Abstimmungsfrist ist abgelaufen" },
-      { status: 400 },
-    );
-  }
-
-  const vote = await prisma.vote.create({
-    data: {
-      votingRoundId,
-      participantId: participant.id,
-      locationId,
-    },
-  });
-
-  // Check if all participants voted → auto-close round
-  const totalParticipants = await prisma.participant.count({
-    where: { eventId: participant.eventId },
-  });
-
-  const totalVotes = await prisma.vote.count({
-    where: { votingRoundId },
-  });
-
-  if (totalVotes >= totalParticipants) {
-    await prisma.votingRound.update({
-      where: { id: votingRoundId },
-      data: { status: "closed" },
     });
 
-    await prisma.event.update({
-      where: { id: participant.eventId },
-      data: { status: "results" },
+    // Check if all participants voted → auto-close round
+    const totalParticipants = await prisma.participant.count({
+      where: { eventId: participant.eventId },
     });
-  }
 
-  return NextResponse.json(vote, { status: 201 });
+    const totalVotes = await prisma.vote.count({
+      where: { votingRoundId },
+    });
+
+    if (totalVotes >= totalParticipants) {
+      await prisma.votingRound.update({
+        where: { id: votingRoundId },
+        data: { status: "closed" },
+      });
+
+      await prisma.event.update({
+        where: { id: participant.eventId },
+        data: { status: "results" },
+      });
+    }
+
+    return NextResponse.json(vote, { status: 201 });
+  } catch (err) {
+    logError("votes.POST", err);
+    return NextResponse.json(
+      { error: "Deine Stimme konnte nicht gespeichert werden" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function GET(request: NextRequest) {

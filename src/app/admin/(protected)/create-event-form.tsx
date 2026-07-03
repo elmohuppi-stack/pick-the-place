@@ -7,6 +7,7 @@ export function CreateEventForm() {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [eventDate, setEventDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
@@ -25,6 +26,7 @@ export function CreateEventForm() {
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim() || undefined,
+          eventDate: eventDate || undefined,
         }),
       });
 
@@ -32,6 +34,7 @@ export function CreateEventForm() {
         setShowForm(false);
         setTitle("");
         setDescription("");
+        setEventDate("");
         router.refresh();
       } else {
         const data = await res.json();
@@ -98,6 +101,17 @@ export function CreateEventForm() {
             onChange={(e) => setDescription(e.target.value)}
             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm"
             placeholder="Kurze Beschreibung"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-theme-primary mb-1">
+            Termin (optional)
+          </label>
+          <input
+            type="date"
+            value={eventDate}
+            onChange={(e) => setEventDate(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 outline-none text-sm"
           />
         </div>
 
