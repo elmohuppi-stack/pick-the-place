@@ -11,7 +11,14 @@ interface Location {
   proposedBy: { name: string };
 }
 
-export function LocationManager({ eventId }: { eventId: string }) {
+export function LocationManager({
+  eventId,
+  onActiveCountChange,
+}: {
+  eventId: string;
+  /** Meldet die Anzahl aktiver Orte (ohne Enthaltungs-Sentinel) an den Workspace. */
+  onActiveCountChange?: (count: number) => void;
+}) {
   const [locations, setLocations] = useState<Location[]>([]);
 
   const fetchLocations = useCallback(async () => {
@@ -26,6 +33,13 @@ export function LocationManager({ eventId }: { eventId: string }) {
   useEffect(() => {
     fetchLocations();
   }, [fetchLocations]);
+
+  // Aktive-Orte-Anzahl an den Workspace melden (steuert dort den „Weiter"-Button).
+  useEffect(() => {
+    onActiveCountChange?.(
+      locations.filter((l) => l.isActive && l.name !== "__optout__").length,
+    );
+  }, [locations, onActiveCountChange]);
 
   async function toggleActive(id: string, isActive: boolean) {
     try {

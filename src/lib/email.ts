@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { DEFAULT_PROPOSAL_TEXT, DEFAULT_VOTE_TEXT } from "./email-templates";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -23,9 +24,7 @@ export async function sendProposalInvite(
   eventTitle: string,
   customText?: string | null,
 ) {
-  const defaultText =
-    "Du bist eingeladen, einen Ort für das Event EVENTNAME vorzuschlagen.";
-  const bodyText = customText || defaultText;
+  const bodyText = customText || DEFAULT_PROPOSAL_TEXT;
   const filled = fillTemplate(bodyText, eventTitle, name);
 
   if (!resend) {
@@ -72,9 +71,7 @@ export async function sendVoteInvite(
   eventTitle: string,
   customText?: string | null,
 ) {
-  const defaultText =
-    "Runde ROUND der Ortswahl für EVENTNAME ist gestartet! Wähle deinen Favoriten.";
-  const bodyText = (customText || defaultText).replace(
+  const bodyText = (customText || DEFAULT_VOTE_TEXT).replace(
     /ROUND/g,
     String(roundNumber),
   );

@@ -37,14 +37,31 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-theme-primary">Dashboard</h1>
-            <IntroHint />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-theme-primary">
+                Dashboard
+              </h1>
+              <IntroHint />
+            </div>
+            <p className="text-theme-secondary text-sm mt-1">
+              Übersicht über alle Events
+            </p>
           </div>
-          <p className="text-theme-secondary text-sm mt-1">
-            Übersicht über alle Events
+        </div>
+
+        <div className="rounded-2xl border border-revenexx-200 dark:border-revenexx-900/50 bg-revenexx-50/60 dark:bg-revenexx-900/20 p-5">
+          <p className="text-sm text-theme-secondary leading-relaxed">
+            Plane ein Event, bei dem der Veranstaltungsort nicht vorgegeben ist,
+            sondern von deinen Kollegen{" "}
+            <span className="font-medium text-theme-primary">vorgeschlagen</span>{" "}
+            und per{" "}
+            <span className="font-medium text-theme-primary">Mehrheit</span>{" "}
+            abgestimmt wird. Erstelle dazu ein Event und lade die Teilnehmer ein –
+            den Rest führt dich der Assistent im Event Schritt für Schritt:
+            Vorbereitung → Vorschläge → Abstimmung → Ergebnis.
           </p>
         </div>
       </div>
