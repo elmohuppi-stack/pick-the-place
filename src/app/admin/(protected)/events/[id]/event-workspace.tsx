@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
   statusLabel,
   statusBadgeClasses,
@@ -48,25 +48,27 @@ interface WorkspaceEvent {
 const STEPS = [
   {
     key: "setup",
-    label: "Teilnehmer",
+    label: "Vorbereitung",
     description:
-      "Prüfe die Teilnehmer und lade sie ein, Orte für das Event vorzuschlagen.",
+      "Bestimme die Teilnehmer, die einen Veranstaltungsort vorschlagen dürfen. Wähle sie aus der Kollegenliste aus oder füge weitere hinzu – danach lädst du sie per E-Mail zur Vorschlagsphase ein.",
   },
   {
     key: "proposal",
     label: "Vorschläge",
     description:
-      "Teilnehmer schlagen Orte vor. Aktiviere die Orte, über die abgestimmt werden soll.",
+      "Deine Kollegen schlagen jetzt Orte vor. Aktiviere die Orte, über die abgestimmt werden soll, und lade dann per E-Mail zur Abstimmung ein.",
   },
   {
     key: "voting",
     label: "Abstimmung",
-    description: "Die Abstimmung läuft – verfolge den Fortschritt live.",
+    description:
+      "Die Abstimmung läuft – verfolge den Fortschritt live. Sie endet, sobald alle abgestimmt haben, oder wenn du sie manuell beendest.",
   },
   {
     key: "results",
     label: "Ergebnis",
-    description: "Das Ergebnis der Abstimmung.",
+    description:
+      "Das Ergebnis der Abstimmung. Bei absoluter Mehrheit steht der Sieger fest – sonst kannst du eine Stichwahl zwischen den stärksten Orten starten.",
   },
 ];
 
@@ -87,10 +89,36 @@ export function EventWorkspace({ event }: { event: WorkspaceEvent }) {
   const isClosed = event.status === "closed";
   const [selected, setSelected] = useState(currentIdx);
   const [showLog, setShowLog] = useState(false);
+  // Unterschritt der Einladungs-Phasen (setup/proposal): 0 = Auswahl, 1 = E-Mail.
+  const [inviteStep, setInviteStep] = useState<0 | 1>(0);
+  // Live-Anzahl aktiver Teilnehmer (vom ParticipantManager gemeldet), initial
+  // aus den Server-Daten. Steuert den „Weiter"-Button in der Vorbereitung.
+  const [activeParticipantCount, setActiveParticipantCount] = useState(
+    () => event.participants.filter((p) => p.isActive).length,
+  );
+  const handleActiveCountChange = useCallback(
+    (count: number) => setActiveParticipantCount(count),
+    [],
+  );
+  // Live-Anzahl aktiver Orte (vom LocationManager gemeldet), initial aus Server-Daten.
+  const [activeLocationCount, setActiveLocationCount] = useState(
+    () =>
+      event.locations.filter((l) => l.isActive && l.name !== "__optout__")
+        .length,
+  );
+  const handleActiveLocationCountChange = useCallback(
+    (count: number) => setActiveLocationCount(count),
+    [],
+  );
 
   const step = STEPS[selected];
   const onCurrent = selected === currentIdx;
   const viewingPast = selected < currentIdx;
+  // In der E-Mail-Stufe wird das Auswahl-Panel (Teilnehmer/Orte) ausgeblendet.
+  const hideManagerPanel =
+    onCurrent &&
+    inviteStep === 1 &&
+    (event.status === "setup" || event.status === "proposal");
 
   const stats = [
     { label: "Teilnehmer", value: event.participants.length },
@@ -198,22 +226,38 @@ export function EventWorkspace({ event }: { event: WorkspaceEvent }) {
       {onCurrent && (
         <StepActions
           eventId={event.id}
+          eventTitle={event.title}
           status={event.status}
           participantCount={event.participants.length}
-          activeLocationCount={activeLocations.length}
+          activeParticipantCount={activeParticipantCount}
+          activeLocationCount={activeLocationCount}
           activeRoundId={activeRound?.id ?? null}
           activeRoundNumber={activeRound?.roundNumber ?? null}
+          voteRoundNumber={
+            activeRound?.roundNumber ?? event.votingRounds.length + 1
+          }
           proposalEmailText={event.proposalEmailText}
           voteEmailText={event.voteEmailText}
+          inviteStep={inviteStep}
+          setInviteStep={setInviteStep}
         />
       )}
 
       {/* Panel des gewählten Schritts */}
       <div>
-        {step.key === "setup" && (
-          <ParticipantManager eventId={event.id} status={event.status} />
+        {step.key === "setup" && !hideManagerPanel && (
+          <ParticipantManager
+            eventId={event.id}
+            status={event.status}
+            onActiveCountChange={handleActiveCountChange}
+          />
         )}
-        {step.key === "proposal" && <LocationManager eventId={event.id} />}
+        {step.key === "proposal" && !hideManagerPanel && (
+          <LocationManager
+            eventId={event.id}
+            onActiveCountChange={handleActiveLocationCountChange}
+          />
+        )}
         {(step.key === "voting" || step.key === "results") && (
           <RoundManager
             event={{

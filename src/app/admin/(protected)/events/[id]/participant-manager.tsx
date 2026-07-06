@@ -28,9 +28,12 @@ function participantLinkInfo(status: string): { path: string; label: string } {
 export function ParticipantManager({
   eventId,
   status,
+  onActiveCountChange,
 }: {
   eventId: string;
   status: string;
+  /** Meldet die Anzahl aktiver Teilnehmer nach jeder Änderung an den Workspace. */
+  onActiveCountChange?: (count: number) => void;
 }) {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [name, setName] = useState("");
@@ -55,6 +58,11 @@ export function ParticipantManager({
   useEffect(() => {
     fetchParticipants();
   }, [fetchParticipants]);
+
+  // Aktive-Anzahl an den Workspace melden (steuert dort den „Weiter"-Button).
+  useEffect(() => {
+    onActiveCountChange?.(participants.filter((p) => p.isActive).length);
+  }, [participants, onActiveCountChange]);
 
   async function addParticipant(e: FormEvent) {
     e.preventDefault();

@@ -9,16 +9,24 @@ import {
 } from "@/lib/event-status";
 import { useInvites } from "./use-invites";
 import { EmailTemplateEditor, ResendWarning } from "./email-manager";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface StepActionsProps {
   eventId: string;
+  eventTitle: string;
   status: string;
   participantCount: number;
+  activeParticipantCount: number;
   activeLocationCount: number;
   activeRoundId: string | null;
   activeRoundNumber: number | null;
+  /** Rundennummer für die Abstimmungs-E-Mail-Vorschau (aktive bzw. nächste Runde). */
+  voteRoundNumber: number;
   proposalEmailText: string | null;
   voteEmailText: string | null;
+  /** Unterschritt der Einladungs-Phasen: 0 = Auswahl, 1 = E-Mail. */
+  inviteStep: 0 | 1;
+  setInviteStep: (step: 0 | 1) => void;
 }
 
 interface LocationApi {
@@ -50,19 +58,44 @@ const linkBtn =
  */
 export function StepActions({
   eventId,
+  eventTitle,
   status,
   participantCount,
+  activeParticipantCount,
   activeLocationCount,
   activeRoundId,
   activeRoundNumber,
+  voteRoundNumber,
   proposalEmailText,
   voteEmailText,
+  inviteStep,
+  setInviteStep,
 }: StepActionsProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRound, setLastRound] = useState<RoundApi | null>(null);
   const [showEditor, setShowEditor] = useState(false);
+  // Offener Bestätigungs-Dialog fürs erneute Versenden von Einladungen.
+  const [confirmResend, setConfirmResend] = useState<"proposal" | "vote" | null>(
+    null,
+  );
+  // E-Mail-Texte leben hier und werden beim Versand persistiert (kein Speichern-Button).
+  const [proposalText, setProposalText] = useState(proposalEmailText || "");
+  const [voteText, setVoteText] = useState(voteEmailText || "");
   const invites = useInvites(eventId, activeRoundNumber);
+
+  // Persistiert einen Einladungstext (leer = null = Standardtext). Gibt Erfolg zurück.
+  const saveTemplate = useCallback(
+    async (field: "proposalEmailText" | "voteEmailText", text: string) => {
+      const res = await fetch("/api/events/templates", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId, [field]: text.trim() || null }),
+      });
+      return res.ok;
+    },
+    [eventId],
+  );
 
   const loadResults = useCallback(async () => {
     try {
@@ -119,10 +152,16 @@ export function StepActions({
   };
 
   // Vorschlagsphase starten UND Vorschlags-Einladungen versenden – ein Schritt.
+  // Der (evtl. angepasste) E-Mail-Text wird zuvor persistiert.
   async function startProposalAndInvite() {
     setBusy(true);
     setError(null);
     try {
+      if (!(await saveTemplate("proposalEmailText", proposalText))) {
+        setError("E-Mail-Text konnte nicht gespeichert werden.");
+        setBusy(false);
+        return;
+      }
       const statusRes = await fetch("/api/events/status", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -143,10 +182,16 @@ export function StepActions({
   }
 
   // Abstimmung starten (Runde anlegen → Status voting) UND einladen.
+  // Der (evtl. angepasste) Abstimmungs-Text wird zuvor persistiert.
   async function startVotingAndInvite() {
     setBusy(true);
     setError(null);
     try {
+      if (!(await saveTemplate("voteEmailText", voteText))) {
+        setError("E-Mail-Text konnte nicht gespeichert werden.");
+        setBusy(false);
+        return;
+      }
       const roundRes = await fetch("/api/rounds", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -225,11 +270,21 @@ export function StepActions({
   const showBanner =
     (status === "results" || status === "closed") && results.length > 0;
 
-  // E-Mail-Text-Editor: passend zur in dieser Phase relevanten Einladung.
-  const editorKind: "proposal" | "vote" =
-    status === "voting" ? "vote" : "proposal";
   const editorAvailable =
     status === "setup" || status === "proposal" || status === "voting";
+
+  // Resend persistiert vorher den aktuellen Text (kein Speichern-Button).
+  // Ausgelöst wird er erst nach Bestätigung im Dialog.
+  const runResend = async () => {
+    if (confirmResend === "proposal") {
+      await saveTemplate("proposalEmailText", proposalText);
+      await invites.send("proposal");
+    } else if (confirmResend === "vote") {
+      await saveTemplate("voteEmailText", voteText);
+      await invites.send("vote");
+    }
+    setConfirmResend(null);
+  };
 
   return (
     <div className="space-y-4">
@@ -265,14 +320,23 @@ export function StepActions({
 
         <Actions
           status={status}
+          eventTitle={eventTitle}
+          voteRoundNumber={voteRoundNumber}
           participantCount={participantCount}
+          activeParticipantCount={activeParticipantCount}
           activeLocationCount={activeLocationCount}
           proposalSent={invites.proposalSent}
           voteSent={invites.voteSent}
           winnerName={winner?.name ?? null}
           busy={busy}
           sending={invites.sending}
-          editorAvailable={editorAvailable}
+          inviteStep={inviteStep}
+          goToInvite={() => setInviteStep(1)}
+          backToSelection={() => setInviteStep(0)}
+          proposalText={proposalText}
+          setProposalText={setProposalText}
+          voteText={voteText}
+          setVoteText={setVoteText}
           showEditor={showEditor}
           toggleEditor={() => setShowEditor((v) => !v)}
           setStatus={setStatus}
@@ -280,35 +344,63 @@ export function StepActions({
           startRunoff={startRunoff}
           startProposalAndInvite={startProposalAndInvite}
           startVotingAndInvite={startVotingAndInvite}
-          resendProposal={() => invites.send("proposal")}
-          resendVote={() => invites.send("vote")}
+          resendProposal={() => setConfirmResend("proposal")}
+          resendVote={() => setConfirmResend("vote")}
         />
 
-        {editorAvailable && showEditor && (
+        {status === "voting" && showEditor && (
           <EmailTemplateEditor
-            eventId={eventId}
-            kind={editorKind}
-            proposalEmailText={proposalEmailText}
-            voteEmailText={voteEmailText}
+            kind="vote"
+            value={voteText}
+            onChange={setVoteText}
+            eventTitle={eventTitle}
+            roundNumber={voteRoundNumber}
           />
         )}
 
         {editorAvailable && <ResendWarning />}
       </div>
+
+      <ConfirmDialog
+        open={confirmResend !== null}
+        title={
+          confirmResend === "vote"
+            ? "Zur Abstimmung erneut einladen?"
+            : "Vorschlags-Einladung erneut senden?"
+        }
+        message={
+          confirmResend === "vote"
+            ? "Alle aktiven Teilnehmer erhalten die Einladung zur Abstimmung noch einmal per E-Mail. Möchtest du fortfahren?"
+            : "Alle aktiven Teilnehmer erhalten die Einladung zum Ortsvorschlag noch einmal per E-Mail. Möchtest du fortfahren?"
+        }
+        confirmLabel="Ja, erneut senden"
+        busy={invites.sending}
+        onConfirm={runResend}
+        onCancel={() => setConfirmResend(null)}
+      />
     </div>
   );
 }
 
 interface ActionsProps {
   status: string;
+  eventTitle: string;
+  voteRoundNumber: number;
   participantCount: number;
+  activeParticipantCount: number;
   activeLocationCount: number;
   proposalSent: number | null;
   voteSent: number | null;
   winnerName: string | null;
   busy: boolean;
   sending: boolean;
-  editorAvailable: boolean;
+  inviteStep: 0 | 1;
+  goToInvite: () => void;
+  backToSelection: () => void;
+  proposalText: string;
+  setProposalText: (v: string) => void;
+  voteText: string;
+  setVoteText: (v: string) => void;
   showEditor: boolean;
   toggleEditor: () => void;
   setStatus: (s: string) => void;
@@ -321,55 +413,109 @@ interface ActionsProps {
 }
 
 function Actions(p: ActionsProps) {
-  const editorLink = p.editorAvailable && (
-    <button onClick={p.toggleEditor} className={linkBtn}>
-      {p.showEditor ? "E-Mail-Text ausblenden" : "E-Mail-Text anpassen"}
-    </button>
-  );
-
   if (p.status === "setup") {
+    // Unterschritt 0: Teilnehmer bestimmen.
+    if (p.inviteStep === 0) {
+      return (
+        <Block text="Bestimme die Teilnehmer für die Vorschlagsphase. Prüfe die Liste unten – deaktiviere einzelne Personen oder füge weitere hinzu. Danach lädst du sie zur Vorschlagsphase ein.">
+          <button
+            className={primaryBtn}
+            disabled={p.busy || p.sending || p.activeParticipantCount === 0}
+            onClick={p.goToInvite}
+          >
+            Weiter zum Einladungstext
+          </button>
+          {p.activeParticipantCount === 0 && (
+            <span className="text-xs text-theme-muted w-full">
+              Aktiviere oder füge unten mindestens einen Teilnehmer hinzu.
+            </span>
+          )}
+        </Block>
+      );
+    }
+    // Unterschritt 1: Einladungstext & Versand.
     return (
-      <Block text="Prüfe die Teilnehmer. Wenn alle passen, lade sie ein – damit startet die Vorschlagsphase.">
-        <button
-          className={primaryBtn}
-          disabled={p.busy || p.sending || p.participantCount === 0}
-          onClick={p.startProposalAndInvite}
-        >
-          Einladungen versenden &amp; Vorschlagsphase starten
-        </button>
-        {editorLink}
-        {p.participantCount === 0 && (
-          <span className="text-xs text-theme-muted w-full">
-            Füge zuerst unten Teilnehmer hinzu.
-          </span>
-        )}
-      </Block>
+      <InviteStep
+        summary={
+          <>
+            <span className="font-medium text-theme-primary">
+              {p.activeParticipantCount}
+            </span>{" "}
+            {p.activeParticipantCount === 1 ? "Teilnehmer" : "Teilnehmer"} erhalten
+            die Einladung, Orte vorzuschlagen.
+          </>
+        }
+        onBack={p.backToSelection}
+        backLabel="Teilnehmer ändern"
+        editor={
+          <EmailTemplateEditor
+            kind="proposal"
+            value={p.proposalText}
+            onChange={p.setProposalText}
+            eventTitle={p.eventTitle}
+          />
+        }
+        sendLabel="E-Mail für Vorschläge versenden"
+        sendHint="Mit dem Versand startet die Vorschlagsphase."
+        onSend={p.startProposalAndInvite}
+        disabled={p.busy || p.sending}
+      />
     );
   }
 
   if (p.status === "proposal") {
-    return (
-      <Block
-        text={
-          p.activeLocationCount === 0
-            ? "Teilnehmer schlagen Orte vor. Aktiviere unten die Orte für die Abstimmung."
-            : `${p.activeLocationCount} Orte sind aktiv. Starte die Abstimmung, wenn du bereit bist.`
-        }
-      >
-        <button
-          className={primaryBtn}
-          disabled={p.busy || p.sending || p.activeLocationCount === 0}
-          onClick={p.startVotingAndInvite}
+    // Unterschritt 0: Orte für die Abstimmung aktivieren.
+    if (p.inviteStep === 0) {
+      return (
+        <Block
+          text={
+            p.activeLocationCount === 0
+              ? "Deine Kollegen schlagen jetzt Orte vor. Aktiviere unten die Orte, über die abgestimmt werden soll."
+              : `${p.activeLocationCount} Orte sind für die Abstimmung aktiviert. Wenn du bereit bist, lädst du zur Abstimmung ein.`
+          }
         >
-          Abstimmung starten &amp; einladen
-        </button>
-        <button className={linkBtn} disabled={p.sending} onClick={p.resendProposal}>
-          {(p.proposalSent ?? 0) > 0
-            ? "Vorschlags-Einladung erneut senden"
-            : "Vorschlags-Einladung senden"}
-        </button>
-        {editorLink}
-      </Block>
+          <button
+            className={primaryBtn}
+            disabled={p.busy || p.sending || p.activeLocationCount === 0}
+            onClick={p.goToInvite}
+          >
+            Weiter zum Einladungstext
+          </button>
+          <button className={linkBtn} disabled={p.sending} onClick={p.resendProposal}>
+            {(p.proposalSent ?? 0) > 0
+              ? "Vorschlags-Einladung erneut senden"
+              : "Vorschlags-Einladung senden"}
+          </button>
+        </Block>
+      );
+    }
+    // Unterschritt 1: Abstimmungs-Einladung & Versand.
+    return (
+      <InviteStep
+        summary={
+          <>
+            <span className="font-medium text-theme-primary">
+              {p.activeLocationCount}
+            </span>{" "}
+            Orte stehen zur Abstimmung.
+          </>
+        }
+        onBack={p.backToSelection}
+        backLabel="Orte ändern"
+        editor={
+          <EmailTemplateEditor
+            kind="vote"
+            value={p.voteText}
+            onChange={p.setVoteText}
+            eventTitle={p.eventTitle}
+            roundNumber={p.voteRoundNumber}
+          />
+        }
+        sendLabel="E-Mail für Abstimmung versenden"
+        sendHint="Mit dem Versand startet die Abstimmung."
+        onSend={p.startVotingAndInvite}
+        disabled={p.busy || p.sending}
+      />
     );
   }
 
@@ -384,7 +530,9 @@ function Actions(p: ActionsProps) {
             ? "Zur Abstimmung erneut einladen"
             : "Zur Abstimmung einladen"}
         </button>
-        {editorLink}
+        <button onClick={p.toggleEditor} className={linkBtn}>
+          {p.showEditor ? "E-Mail-Text ausblenden" : "E-Mail-Text anpassen"}
+        </button>
       </Block>
     );
   }
@@ -445,6 +593,52 @@ function Block({
       <p className="text-sm text-theme-secondary mb-3">{text}</p>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         {children}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Zweiter Unterschritt der Einladungs-Phasen: Zusammenfassung der Auswahl
+ * (mit Zurück-Link), sichtbarer Einladungstext und der finale Versand-Button.
+ */
+function InviteStep({
+  summary,
+  onBack,
+  backLabel,
+  editor,
+  sendLabel,
+  sendHint,
+  onSend,
+  disabled,
+}: {
+  summary: React.ReactNode;
+  onBack: () => void;
+  backLabel: string;
+  editor: React.ReactNode;
+  sendLabel: string;
+  sendHint: string;
+  onSend: () => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <p className="text-sm text-theme-secondary">{summary}</p>
+        <button onClick={onBack} className={linkBtn}>
+          {backLabel}
+        </button>
+      </div>
+      <p className="text-sm text-theme-secondary">
+        Passe bei Bedarf den Einladungstext an – oder lass ihn leer für den
+        Standardtext.
+      </p>
+      {editor}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <button className={primaryBtn} disabled={disabled} onClick={onSend}>
+          {sendLabel}
+        </button>
+        <span className="text-xs text-theme-muted">{sendHint}</span>
       </div>
     </div>
   );
