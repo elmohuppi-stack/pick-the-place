@@ -113,6 +113,42 @@ export async function sendVoteInvite(
   return { success: true, data };
 }
 
+export async function sendPasswordReset(
+  email: string,
+  name: string,
+  resetLink: string,
+) {
+  if (!resend) {
+    console.log(`[EMAIL MOCK] Password reset to ${email}: ${resetLink}`);
+    return { success: true, mocked: true };
+  }
+
+  const { data, error } = await resend.emails.send({
+    from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    to: email,
+    subject: "🔑 Passwort zurücksetzen – Pick the Place",
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+        <h1 style="color: #620DFF;">Hallo ${name}!</h1>
+        <p>Du hast angefragt, dein Admin-Passwort zurückzusetzen. Klicke auf den Button, um ein neues Passwort zu vergeben:</p>
+        <a href="${resetLink}" style="display: inline-block; background: #620DFF; color: white; padding: 12px 24px; border-radius: 9999px; text-decoration: none; margin: 16px 0;">
+          Passwort zurücksetzen
+        </a>
+        <p style="color: #6b7280; font-size: 14px;">Dieser Link ist eine Stunde gültig. Wenn du das nicht angefragt hast, kannst du diese E-Mail einfach ignorieren – dein Passwort bleibt unverändert.</p>
+        <hr style="border:none;border-top:1px solid #EDECF3;margin:24px 0 12px;" />
+        <p style="color:#9a94ac;font-size:12px;margin:0;">Pick the Place · <span style="color:#620DFF;font-weight:bold;">revenexx</span></p>
+      </div>
+    `,
+  });
+
+  if (error) {
+    console.error("Failed to send password reset:", error);
+    return { success: false, error };
+  }
+
+  return { success: true, data };
+}
+
 export async function sendResultsNotification(
   email: string,
   name: string,

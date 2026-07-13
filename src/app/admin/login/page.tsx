@@ -20,7 +20,32 @@ export default function AdminLoginPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // Forgot password state
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotSubmitted, setForgotSubmitted] = useState(false);
+
   const router = useRouter();
+
+  async function handleForgotPassword(e: FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      await fetch("/api/admin/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      // Immer generische Bestätigung – wir verraten nicht, ob die Adresse
+      // ein Admin-Zugang ist.
+      setForgotSubmitted(true);
+    } catch {
+      setError("Ein Fehler ist aufgetreten");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleLogin(e: FormEvent) {
     e.preventDefault();
@@ -190,6 +215,109 @@ export default function AdminLoginPage() {
     );
   }
 
+  // Forgot-password view
+  if (forgotMode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="max-w-sm w-full">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-revenexx-500 to-revenexx-700 shadow-lg shadow-revenexx-500/25 mb-4">
+              <svg
+                className="w-7 h-7 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"
+                />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              Passwort vergessen
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+              Wir schicken dir einen Reset-Link
+            </p>
+          </div>
+
+          {forgotSubmitted ? (
+            <div className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60 space-y-4">
+              <div className="p-3 rounded-xl text-sm bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                Falls ein Zugang mit dieser E-Mail existiert, haben wir einen
+                Link zum Zurücksetzen des Passworts verschickt. Bitte prüfe dein
+                Postfach.
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setForgotMode(false);
+                  setForgotSubmitted(false);
+                }}
+                className="w-full px-4 py-2.5 text-sm btn btn-primary"
+              >
+                Zurück zum Login
+              </button>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleForgotPassword}
+              className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-slate-200/60 dark:border-slate-700/60 space-y-4"
+            >
+              <div>
+                <label
+                  htmlFor="forgotEmail"
+                  className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                >
+                  E-Mail
+                </label>
+                <input
+                  id="forgotEmail"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-revenexx-500 focus:border-transparent outline-none transition-all"
+                  placeholder="admin@example.com"
+                  required
+                />
+              </div>
+
+              {error && (
+                <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm p-3 rounded-xl">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-4 py-2.5 text-sm btn btn-primary disabled:opacity-50"
+              >
+                {loading ? "Wird gesendet..." : "Reset-Link anfordern"}
+              </button>
+
+              <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotMode(false);
+                    setError("");
+                  }}
+                  className="text-revenexx-500 hover:underline"
+                >
+                  Zurück zum Login
+                </button>
+              </p>
+            </form>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-sm w-full">
@@ -318,6 +446,19 @@ export default function AdminLoginPage() {
           >
             {loading ? "Wird angemeldet..." : "Anmelden"}
           </button>
+
+          <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+            <button
+              type="button"
+              onClick={() => {
+                setForgotMode(true);
+                setError("");
+              }}
+              className="text-revenexx-500 hover:underline"
+            >
+              Passwort vergessen?
+            </button>
+          </p>
         </form>
 
         <div className="flex justify-center mt-6">
