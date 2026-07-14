@@ -73,8 +73,12 @@ function VotePage() {
         const roundData = await roundRes.json();
         setRound(roundData);
 
-        // Get locations
-        const locRes = await fetch(`/api/locations?eventId=${meData.event.id}`);
+        // Get locations. Muss über den Token laufen – die Locations-API
+        // verlangt Admin-Session ODER Teilnehmer-Token; ein reiner eventId-
+        // Aufruf aus dem Teilnehmer-Browser liefert 401 (dann blieb die Liste
+        // leer -> "Keine Orte verfügbar"). Der Token blendet zudem den
+        // __optout__-Marker korrekt aus.
+        const locRes = await fetch(`/api/locations?token=${token}`);
         if (locRes.ok) {
           const locs = await locRes.json();
           setLocations(locs.filter((l: any) => l.isActive));
